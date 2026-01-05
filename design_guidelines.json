@@ -1,0 +1,131 @@
+{
+  "typography": {
+    "font_family": {
+      "heading": "Manrope, sans-serif",
+      "body": "Inter, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "weights": {
+      "heading": "600",
+      "body": "400",
+      "bold": "700"
+    },
+    "sizes": {
+      "h1": "text-4xl md:text-5xl tracking-tight",
+      "h2": "text-3xl tracking-tight",
+      "h3": "text-2xl tracking-tight",
+      "body": "text-base leading-relaxed",
+      "small": "text-sm leading-snug",
+      "tiny": "text-xs tracking-wide uppercase"
+    }
+  },
+  "colors": {
+    "palette": {
+      "primary": {
+        "DEFAULT": "#3b82f6",
+        "foreground": "#ffffff",
+        "hover": "#2563eb",
+        "active": "#1d4ed8"
+      },
+      "secondary": {
+        "DEFAULT": "#1e293b",
+        "foreground": "#f8fafc"
+      },
+      "background": {
+        "DEFAULT": "#0f172a",
+        "paper": "#1e293b",
+        "subtle": "#334155"
+      },
+      "text": {
+        "primary": "#f8fafc",
+        "secondary": "#94a3b8",
+        "muted": "#64748b"
+      },
+      "accent": {
+        "success": "#10b981",
+        "warning": "#f59e0b",
+        "error": "#ef4444",
+        "info": "#0ea5e9"
+      }
+    },
+    "theme": "dark",
+    "gradients": {
+      "primary": "from-blue-600 to-indigo-600",
+      "surface": "from-slate-800/50 to-slate-900/50"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "base": "bg-slate-900/70 backdrop-blur-xl border border-white/10 shadow-2xl",
+      "card": "bg-slate-800/40 backdrop-blur-md border border-white/5 hover:bg-slate-800/60 transition-all duration-300"
+    },
+    "borders": {
+      "subtle": "border-white/10",
+      "active": "border-blue-500/50"
+    },
+    "shadows": {
+      "glow": "shadow-[0_0_20px_rgba(59,130,246,0.15)]",
+      "depth": "shadow-xl"
+    }
+  },
+  "grids": {
+    "dashboard": "grid grid-cols-1 md:grid-cols-4 gap-6",
+    "bento": "grid grid-cols-1 md:grid-cols-12 gap-4",
+    "form": "grid grid-cols-1 md:grid-cols-2 gap-6"
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-6 py-2.5 font-medium transition-all shadow-lg shadow-blue-900/20",
+      "secondary": "bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg px-6 py-2.5 font-medium transition-all",
+      "ghost": "hover:bg-slate-800/50 text-slate-400 hover:text-white rounded-lg px-4 py-2 transition-all"
+    },
+    "cards": {
+      "metric": "p-6 rounded-xl bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm hover:border-blue-500/30 transition-colors group relative overflow-hidden",
+      "container": "p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl"
+    },
+    "inputs": {
+      "base": "bg-slate-950/50 border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg h-11 px-4 text-sm text-slate-200 placeholder:text-slate-600 transition-all"
+    }
+  },
+  "image_urls": {
+    "backgrounds": [
+      {
+        "url": "https://images.unsplash.com/photo-1761229170427-487959bfb653?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzZ8MHwxfHNlYXJjaHwzfHxjb3Jwb3JhdGUlMjBvZmZpY2UlMjBhYnN0cmFjdCUyMGJhY2tncm91bmQlMjBibHVlfGVufDB8fHx8MTc2NzYzNzE0OXww&ixlib=rb-4.1.0&q=85",
+        "description": "Modern building facade with blue glass windows - Use for Login Background"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1693764329855-728d8fa40f95?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzZ8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBvZmZpY2UlMjBhYnN0cmFjdCUyMGJhY2tncm91bmQlMjBibHVlfGVufDB8fHx8MTc2NzYzNzE0OXww&ixlib=rb-4.1.0&q=85",
+        "description": "Glass building against sky - Use for Hero Section or Abstract overlays"
+      }
+    ],
+    "people": [
+      {
+        "url": "https://images.unsplash.com/photo-1758518730523-c9f6336ebdae?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwzfHxwcm9mZXNzaW9uYWwlMjBidXNpbmVzcyUyMHRlYW0lMjBwb3J0cmFpdHN8ZW58MHx8fHwxNzY3NjM3MTUxfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Happy business team taking selfie - Use for 'Team' or 'About' section"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1667960732941-03e3f82d68a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBidXNpbmVzcyUyMHRlYW0lMjBwb3J0cmFpdHN8ZW58MHx8fHwxNzY3NjM3MTUxfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Two men in suits - Use for 'Client' or 'Executive' avatars"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Install 'lucide-react' for icons, 'recharts' for charts, 'framer-motion' for animations, 'clsx' and 'tailwind-merge' for class utilities.",
+    "2. THEME: Implement the Dark Mode palette in 'tailwind.config.js'. Ensure 'darkMode: class' is set. Use Slate-900 as the main background, not pure black.",
+    "3. LAYOUT: Create a 'DashboardLayout' component with a fixed sidebar (w-64) and a top header. Use 'Outlet' for page content.",
+    "4. COMPONENTS: Use Shadcn UI components for complex interactions (Select, Dialog, Calendar, Table). Customize them to match the 'Glassmorphism' style defined in 'visual_enhancers'.",
+    "5. PAGES: Build '/login' with the blue glass building background. Build '/dashboard' with a Bento grid of metrics (Projects, Tasks, Payments).",
+    "6. CHARTS: Use Recharts for the 'Pipeline' and 'Activity' charts. Style them with the defined chart colors (Blue, Indigo, Emerald).",
+    "7. ANIMATION: Add subtle entrance animations (fade-in-up) to all dashboard cards using Framer Motion.",
+    "8. ACCESSIBILITY: Ensure all text has sufficient contrast against the dark backgrounds. Use 'text-slate-200' for body text, not 'text-gray-500'."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "DO NOT use generic centered layouts. Use asymmetric grids.",
+    "DO NOT use 'Inter' for headings. Use 'Manrope'.",
+    "ALWAYS add 'data-testid' to interactive elements.",
+    "Use 'sonner' for toast notifications.",
+    "Use 'lucide-react' for icons.",
+    "Ensure all containers with borders have internal padding (p-6 or p-8).",
+    "Never use pure black (#000000). Use tinted dark greys (#0f172a)."
+  ]
+}
