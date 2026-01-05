@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/auth';
 import { 
   LayoutDashboard, 
@@ -52,7 +52,13 @@ const navigation = [
 
 const NavItem = ({ item, mobile = false }) => {
   const { isAdmin } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const isChildActive = item.children?.some(child => location.pathname.startsWith(child.href));
+  const [isOpen, setIsOpen] = useState(isChildActive);
+  
+  useEffect(() => {
+    if (isChildActive) setIsOpen(true);
+  }, [isChildActive]);
 
   if (item.adminOnly && !isAdmin()) return null;
 
