@@ -1,7 +1,7 @@
 [build]
   base = "frontend"
   command = "npm install && npm run build"
-  publish = "frontend/build"
+  publish = "build"
 
 [[redirects]]
   from = "/*"
@@ -9,4 +9,4 @@
   status = 200
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
