@@ -145,7 +145,7 @@ export default function DashboardLayout() {
               <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
                 <span className="text-white font-bold text-sm">MP</span>
               </div>
-              <span className="text-lg font-semibold text-white">Mini-Pactum</span>
+              <span className="text-lg font-semibold text-white">Pactum</span>
             </div>
             <button 
               className="lg:hidden text-slate-400 hover:text-white"
@@ -205,7 +205,7 @@ export default function DashboardLayout() {
             </button>
             
             <div className="flex-1 lg:flex-none">
-              <h1 className="text-lg font-semibold text-white lg:hidden">Mini-Pactum</h1>
+              <h1 className="text-lg font-semibold text-white lg:hidden">Pactum</h1>
             </div>
 
             <div className="flex items-center gap-4">

@@ -22,7 +22,7 @@ export default function Login() {
 
     try {
       await login(email, password);
-      toast.success('Bienvenido a Mini-Pactum');
+      toast.success('Bienvenido a Pactum');
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -49,7 +49,7 @@ export default function Login() {
           <div className="mx-auto w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center mb-4 shadow-lg shadow-blue-600/30">
             <span className="text-white font-bold text-2xl">MP</span>
           </div>
-          <CardTitle className="text-2xl font-bold text-white">Mini-Pactum</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white">Pactum</CardTitle>
           <CardDescription className="text-slate-400">
             Sistema de Gestión de Proyectos
           </CardDescription>
@@ -119,7 +119,7 @@ export default function Login() {
               Proyecto CRM Business and Technology
             </p>
             <p className="text-xs text-center text-slate-600 mt-1">
-              © 2026 Mini-Pactum
+              © 2026 Pactum
             </p>
           </div>
         </CardContent>
