@@ -110,6 +110,21 @@ async def seed_initial_data():
     await db.users.insert_one(demo_admin_doc)
     print("✅ Admin Demo creado: admin@demo.com")
     
+    # Create user for Business and Technology project (activo2_26@gmail.com)
+    bt_user_id = str(uuid.uuid4())
+    bt_user_doc = {
+        "id": bt_user_id,
+        "email": "activo2_26@gmail.com",
+        "password": hash_password("Pactum#2026!"),
+        "name": "Amaru José Mojica López",
+        "role": "USER",
+        "company_id": pactum_company_id,
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.users.insert_one(bt_user_doc)
+    print("✅ Usuario Business & Technology creado: activo2_26@gmail.com")
+    
     # Create sample clients for demo company
     print("📝 Creando clientes de demostración...")
     for i in range(5):
@@ -176,10 +191,15 @@ async def seed_initial_data():
     print("   Password: SoftwareNic2026!")
     print("   Acceso:   Control total del sistema\n")
     
-    print("🟢 CLIENTE PACTUM (Amaru Mojica):")
+    print("🟢 CLIENTE PACTUM (Amaru Mojica - Admin):")
     print("   Email:    admin@pactum.com")
     print("   Password: Pactum#2026!")
     print("   Acceso:   Todos los módulos\n")
+    
+    print("🔵 CLIENTE PACTUM (Business & Technology - Usuario):")
+    print("   Email:    activo2_26@gmail.com")
+    print("   Password: Pactum#2026!")
+    print("   Acceso:   Usuario del proyecto\n")
     
     print("🟡 EMPRESA DEMO (Trial 14 días):")
     print("   Email:    admin@demo.com")

@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
-import { Building2, LogIn } from 'lucide-react';
+import { LogIn, Sparkles } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -32,59 +32,62 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Building2 className="h-12 w-12 text-blue-400" />
-            <span className="text-3xl font-bold text-white">Pactum SaaS</span>
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Pactum SaaS</span>
           </div>
-          <p className="text-slate-300">Multi-ERP / Multi-CRM Platform</p>
+          <p className="text-gray-600 text-lg">Multi-ERP / Multi-CRM Platform</p>
         </div>
 
-        <Card className="bg-slate-800/80 border-slate-700 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-2xl text-white">Iniciar Sesión</CardTitle>
-            <CardDescription className="text-slate-300">
-              Ingresa tus credenciales para acceder
+        <Card className="bg-white border-2 border-gray-200 shadow-2xl">
+          <CardHeader className="border-b border-gray-100 pb-6">
+            <CardTitle className="text-2xl text-gray-900 font-bold">Iniciar Sesión</CardTitle>
+            <CardDescription className="text-gray-600 text-base">
+              Ingresa tus credenciales para acceder a tu cuenta
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <Label htmlFor="email" className="text-slate-200">Email</Label>
+                <Label htmlFor="email" className="text-gray-700 font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 mt-1"
                   placeholder="tu@email.com"
                 />
               </div>
               <div>
-                <Label htmlFor="password" className="text-slate-200">Contraseña</Label>
+                <Label htmlFor="password" className="text-gray-700 font-medium">Contraseña</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
-                  className="bg-slate-700 border-slate-600 text-white"
+                  className="bg-white border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-blue-500 mt-1"
                   placeholder="••••••••"
                 />
               </div>
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                size="lg"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 text-base rounded-xl shadow-lg hover:shadow-xl transition-all mt-6"
               >
                 {loading ? (
                   'Iniciando sesión...'
                 ) : (
                   <>
-                    <LogIn className="h-4 w-4 mr-2" />
+                    <LogIn className="h-5 w-5 mr-2" />
                     Iniciar Sesión
                   </>
                 )}
@@ -92,25 +95,28 @@ const Login = () => {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-slate-400 text-sm">
+              <p className="text-gray-600 text-sm">
                 ¿No tienes una cuenta?{' '}
                 <button
                   onClick={() => navigate('/')}
-                  className="text-blue-400 hover:underline font-medium"
+                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
                 >
                   Registra tu empresa
                 </button>
               </p>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-slate-700">
-              <p className="text-slate-400 text-xs text-center mb-3">Usuarios de demostración:</p>
-              <div className="space-y-2 text-xs text-slate-300">
-                <div className="bg-slate-700/50 p-2 rounded">
-                  <strong className="text-blue-400">Super Admin:</strong> amaru@softwarenicaragua.com / SuperAdmin2026!
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <p className="text-gray-500 text-xs text-center mb-3 font-medium">Usuarios de demostración:</p>
+              <div className="space-y-2 text-xs">
+                <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg">
+                  <strong className="text-blue-700">Super Admin:</strong> <span className="text-gray-700">admin@softwarenicaragua.com / SoftwareNic2026!</span>
                 </div>
-                <div className="bg-slate-700/50 p-2 rounded">
-                  <strong className="text-green-400">Empresa Demo:</strong> admin@demo.com / Demo2026!
+                <div className="bg-green-50 border border-green-100 p-3 rounded-lg">
+                  <strong className="text-green-700">Cliente Pactum:</strong> <span className="text-gray-700">admin@pactum.com / Pactum#2026!</span>
+                </div>
+                <div className="bg-purple-50 border border-purple-100 p-3 rounded-lg">
+                  <strong className="text-purple-700">Usuario B&T:</strong> <span className="text-gray-700">activo2_26@gmail.com / Pactum#2026!</span>
                 </div>
               </div>
             </div>
