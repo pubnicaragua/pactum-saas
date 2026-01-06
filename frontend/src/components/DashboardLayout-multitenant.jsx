@@ -38,21 +38,21 @@ const DashboardLayout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-900">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 transform transition-transform duration-200 ease-in-out ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-800 border-r border-slate-700 transform transition-transform duration-200 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-800">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-lg flex items-center justify-center shadow-lg">
-              <Mountain className="h-6 w-6 text-white" />
+          <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-700">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+              <span className="text-white text-lg font-bold">MP</span>
             </div>
             <div className="flex-1">
-              <h1 className="text-xl font-bold text-white">Pactum SaaS</h1>
+              <h2 className="text-xl font-semibold text-white">Pactum</h2>
               {user?.company_name && (
                 <p className="text-xs text-slate-400 truncate">{user.company_name}</p>
               )}
@@ -60,17 +60,17 @@ const DashboardLayout = () => {
           </div>
 
           {/* User Info */}
-          <div className="px-6 py-4 border-b border-slate-800">
+          <div className="px-6 py-4 border-b border-slate-700">
             <div className="flex items-center gap-3">
               <Avatar>
-                <AvatarFallback className="bg-blue-600 text-white">
+                <AvatarFallback className="bg-blue-600 text-white font-semibold">
                   {getInitials(user?.name || 'U')}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">{user?.name}</p>
                 <div className="flex items-center gap-2">
-                  <Badge variant={isSuperAdmin ? "destructive" : "secondary"} className="text-xs">
+                  <Badge variant={isSuperAdmin ? "destructive" : "secondary"} className="text-xs bg-slate-700 text-slate-200 border-slate-600">
                     {isSuperAdmin ? (
                       <>
                         <Shield className="h-3 w-3 mr-1" />
@@ -91,10 +91,10 @@ const DashboardLayout = () => {
                 <button
                   key={item.name}
                   onClick={() => navigate(item.href)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     isActive(item.href)
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -105,29 +105,28 @@ const DashboardLayout = () => {
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-slate-800">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-slate-300 hover:text-white hover:bg-slate-800"
+          <div className="p-4 border-t border-slate-700">
+            <button
               onClick={logout}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all"
             >
-              <LogOut className="h-5 w-5 mr-3" />
+              <LogOut className="h-5 w-5" />
               Cerrar Sesión
-            </Button>
+            </button>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className={`transition-all duration-200 ${sidebarOpen ? 'lg:pl-64' : ''}`}>
+      <div className={`transition-all duration-200 ${sidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
         {/* Top Bar */}
-        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
+        <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-40">
           <div className="flex items-center justify-between px-4 py-3">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden"
+              className="lg:hidden text-slate-300 hover:text-white hover:bg-slate-700"
             >
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -166,7 +165,7 @@ const DashboardLayout = () => {
         </header>
 
         {/* Page Content */}
-        <main className="min-h-[calc(100vh-4rem)]">
+        <main className="p-6 min-h-screen">
           <Outlet />
         </main>
       </div>
