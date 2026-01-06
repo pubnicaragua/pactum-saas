@@ -18,7 +18,9 @@ import {
   Edit,
   CheckCircle2,
   Circle,
-  AlertCircle
+  AlertCircle,
+  Download,
+  Upload
 } from 'lucide-react';
 
 const TaskList = () => {
@@ -28,6 +30,7 @@ const TaskList = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
+  const [importing, setImporting] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -154,6 +157,82 @@ const TaskList = () => {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'https://pactum-saas-backend.onrender.com';
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${API_URL}/api/tasks/export`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Error al exportar');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tareas_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('Tareas exportadas exitosamente');
+    } catch (error) {
+      toast.error('Error al exportar tareas');
+      console.error(error);
+    }
+  };
+
+  const handleImport = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!tasks[0]?.project_id) {
+      toast.error('No se encontró el proyecto');
+      return;
+    }
+    
+    setImporting(true);
+    
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'https://pactum-saas-backend.onrender.com';
+      const token = localStorage.getItem('token');
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('project_id', tasks[0].project_id);
+      
+      const response = await fetch(`${API_URL}/api/tasks/import`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) throw new Error(result.detail || 'Error al importar');
+      
+      toast.success(result.message);
+      if (result.errors && result.errors.length > 0) {
+        console.warn('Errores de importación:', result.errors);
+      }
+      
+      await loadTasks();
+    } catch (error) {
+      toast.error(error.message || 'Error al importar tareas');
+      console.error(error);
+    } finally {
+      setImporting(false);
+      event.target.value = '';
+    }
+  };
+
   const filteredTasks = filterStatus === 'all' 
     ? tasks 
     : tasks.filter(t => t.status === filterStatus);
@@ -183,13 +262,44 @@ const TaskList = () => {
           <p className="text-slate-400 mt-1">Gestiona todas tus tareas en formato lista</p>
         </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Tarea
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleExport}
+            className="border-slate-700 hover:bg-slate-800"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar Excel
+          </Button>
+          
+          <label htmlFor="import-excel">
+            <Button 
+              variant="outline" 
+              disabled={importing}
+              className="border-slate-700 hover:bg-slate-800"
+              asChild
+            >
+              <span>
+                <Upload className="h-4 w-4 mr-2" />
+                {importing ? 'Importando...' : 'Importar Excel'}
+              </span>
             </Button>
-          </DialogTrigger>
+          </label>
+          <input
+            id="import-excel"
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleImport}
+            className="hidden"
+          />
+          
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Nueva Tarea
+              </Button>
+            </DialogTrigger>
           <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingTask ? 'Editar Tarea' : 'Nueva Tarea'}</DialogTitle>
