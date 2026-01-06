@@ -105,21 +105,6 @@ const Login = () => {
                 </button>
               </p>
             </div>
-
-            <div className="mt-8 pt-6 border-t border-gray-100">
-              <p className="text-gray-500 text-xs text-center mb-3 font-medium">Usuarios de demostración:</p>
-              <div className="space-y-2 text-xs">
-                <div className="bg-blue-50 border border-blue-100 p-3 rounded-lg">
-                  <strong className="text-blue-700">Super Admin:</strong> <span className="text-gray-700">admin@softwarenicaragua.com / SoftwareNic2026!</span>
-                </div>
-                <div className="bg-green-50 border border-green-100 p-3 rounded-lg">
-                  <strong className="text-green-700">Cliente Pactum:</strong> <span className="text-gray-700">admin@pactum.com / Pactum#2026!</span>
-                </div>
-                <div className="bg-purple-50 border border-purple-100 p-3 rounded-lg">
-                  <strong className="text-purple-700">Usuario B&T:</strong> <span className="text-gray-700">activo2_26@gmail.com / Pactum#2026!</span>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
