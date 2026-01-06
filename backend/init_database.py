@@ -88,34 +88,101 @@ async def seed_initial_data():
     await db.users.insert_one(amaru_user_doc)
     print("✅ Usuario creado: activo2_26@gmail.com (Amaru Mojica)")
     
-    # Create project for Amaru Mojica
+    # Create project for Amaru Mojica with complete details
     amaru_project_id = str(uuid.uuid4())
     amaru_project_doc = {
         "id": amaru_project_id,
-        "name": "Business & Technology - Sistema de Gestión",
-        "description": "Desarrollo de sistema de gestión empresarial completo con módulos de CRM, facturación y reportes",
+        "name": "Business & Technology - Sistema de Gestión Empresarial",
+        "description": "Desarrollo completo de sistema de gestión empresarial con 52 módulos/asignaciones incluyendo CRM, facturación, inventario, reportes avanzados y dashboards ejecutivos",
         "client_name": "Amaru José Mojica López",
         "budget": 5200.00,
         "status": "en_progreso",
         "start_date": datetime.now(timezone.utc).isoformat(),
         "end_date": (datetime.now(timezone.utc) + timedelta(days=90)).isoformat(),
+        "contract_date": datetime.now(timezone.utc).isoformat(),
+        "contract_number": "BT-2026-001",
+        "payment_terms": "50% adelanto, 25% avance 50%, 25% entrega final",
         "assigned_users": [amaru_user_id],
         "deliverables": [
-            "Módulo de CRM completo",
-            "Sistema de facturación",
-            "Dashboard de reportes",
-            "Integración con APIs externas",
-            "Documentación técnica"
+            "1. Módulo de CRM - Gestión de clientes y contactos",
+            "2. Sistema de facturación electrónica",
+            "3. Dashboard ejecutivo con KPIs en tiempo real",
+            "4. Módulo de inventario y almacén",
+            "5. Sistema de reportes personalizables",
+            "6. Integración con APIs de bancos",
+            "7. Módulo de recursos humanos",
+            "8. Sistema de nómina",
+            "9. Control de gastos e ingresos",
+            "10. Gestión de proyectos internos",
+            "11. Sistema de tickets/soporte",
+            "12. Módulo de ventas y cotizaciones",
+            "13. Gestión de proveedores",
+            "14. Control de compras",
+            "15. Sistema de punto de venta (POS)",
+            "16. Módulo de contabilidad",
+            "17. Gestión documental",
+            "18. Sistema de permisos y roles",
+            "19. Auditoría y logs de sistema",
+            "20. Módulo de marketing y campañas",
+            "21. Integración con redes sociales",
+            "22. Sistema de email marketing",
+            "23. Gestión de leads y oportunidades",
+            "24. Pipeline de ventas visual",
+            "25. Calendario y agenda compartida",
+            "26. Sistema de tareas y recordatorios",
+            "27. Módulo de análisis predictivo",
+            "28. Reportes financieros automatizados",
+            "29. Dashboard de ventas",
+            "30. Módulo de servicio al cliente",
+            "31. Chat interno para equipo",
+            "32. Sistema de notificaciones push",
+            "33. Integración con WhatsApp Business",
+            "34. Módulo de firma electrónica",
+            "35. Sistema de backup automático",
+            "36. Gestión de contratos",
+            "37. Control de vencimientos",
+            "38. Módulo de cobranza",
+            "39. Sistema de estados de cuenta",
+            "40. Integración con pasarelas de pago",
+            "41. Módulo de logística y envíos",
+            "42. Tracking de pedidos",
+            "43. Sistema de devoluciones",
+            "44. Gestión de garantías",
+            "45. Módulo de calidad (QA)",
+            "46. Sistema de encuestas de satisfacción",
+            "47. Análisis de competencia",
+            "48. Módulo de business intelligence",
+            "49. Exportación de datos (Excel, PDF, CSV)",
+            "50. API REST para integraciones",
+            "51. Documentación técnica completa",
+            "52. Capacitación y soporte post-entrega"
         ],
-        "notes": "Proyecto prioritario - Business & Technology",
+        "notes": "Contrato firmado el " + datetime.now(timezone.utc).strftime("%d/%m/%Y") + ". Proyecto prioritario con 52 entregables específicos. Incluye 3 meses de soporte post-entrega. Reuniones semanales de seguimiento cada viernes. Cliente requiere actualizaciones diarias por WhatsApp.",
         "progress_percentage": 35,
+        "total_hours_estimated": 520,
+        "hours_worked": 182,
+        "milestones": [
+            {"name": "Fase 1: Análisis y Diseño", "status": "completado", "percentage": 100},
+            {"name": "Fase 2: Desarrollo Backend (Módulos 1-20)", "status": "en_progreso", "percentage": 45},
+            {"name": "Fase 3: Desarrollo Frontend (Módulos 1-20)", "status": "en_progreso", "percentage": 30},
+            {"name": "Fase 4: Desarrollo Módulos Avanzados (21-40)", "status": "pendiente", "percentage": 0},
+            {"name": "Fase 5: Integraciones y APIs (41-52)", "status": "pendiente", "percentage": 0},
+            {"name": "Fase 6: Testing y QA", "status": "pendiente", "percentage": 0},
+            {"name": "Fase 7: Despliegue y Capacitación", "status": "pendiente", "percentage": 0}
+        ],
+        "team_members": [
+            {"name": "Juan Pérez", "role": "Backend Developer", "email": "juan@softwarenicaragua.com"},
+            {"name": "María García", "role": "Frontend Developer", "email": "maria@softwarenicaragua.com"},
+            {"name": "Carlos López", "role": "UI/UX Designer", "email": "carlos@softwarenicaragua.com"},
+            {"name": "Ana Martínez", "role": "QA Tester", "email": "ana@softwarenicaragua.com"}
+        ],
         "company_id": pactum_company_id,
         "created_by": pactum_admin_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     await db.projects.insert_one(amaru_project_doc)
-    print("✅ Proyecto Amaru Mojica creado: $5,200")
+    print("✅ Proyecto Amaru Mojica creado: $5,200 (52 entregables)")
     
     # Create Alma IA user (Partner/Cliente)
     alma_user_id = str(uuid.uuid4())

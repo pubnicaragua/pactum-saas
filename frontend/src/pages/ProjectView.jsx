@@ -12,7 +12,11 @@ import {
   Clock, 
   FileText,
   TrendingUp,
-  User
+  User,
+  Users,
+  Target,
+  Award,
+  Timer
 } from 'lucide-react';
 
 const ProjectView = () => {
@@ -239,12 +243,193 @@ const ProjectView = () => {
         </Card>
       )}
 
-      {/* Team Info */}
+      {/* Contract Info */}
+      {project.contract_number && (
+        <Card className="border border-slate-700 bg-slate-800/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <FileText className="h-5 w-5 text-blue-400" />
+              Información del Contrato
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                <p className="text-xs text-slate-500 mb-1">Número de Contrato</p>
+                <p className="text-lg font-bold text-white">{project.contract_number}</p>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                <p className="text-xs text-slate-500 mb-1">Fecha de Firma</p>
+                <p className="text-lg font-bold text-white">
+                  {new Date(project.contract_date).toLocaleDateString('es-ES')}
+                </p>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                <p className="text-xs text-slate-500 mb-1">Términos de Pago</p>
+                <p className="text-sm font-medium text-white">{project.payment_terms}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Hours Tracking */}
+      {project.total_hours_estimated && (
+        <Card className="border border-slate-700 bg-slate-800/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Timer className="h-5 w-5 text-blue-400" />
+              Control de Horas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Horas Estimadas</p>
+                    <p className="text-xl font-bold text-white">{project.total_hours_estimated}h</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                    <CheckCircle2 className="h-5 w-5 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Horas Trabajadas</p>
+                    <p className="text-xl font-bold text-white">{project.hours_worked}h</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Horas Restantes</p>
+                    <p className="text-xl font-bold text-white">{project.total_hours_estimated - project.hours_worked}h</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mb-2">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-slate-300">Progreso de Horas</span>
+                <span className="text-sm font-bold text-blue-400">
+                  {Math.round((project.hours_worked / project.total_hours_estimated) * 100)}%
+                </span>
+              </div>
+              <div className="w-full bg-slate-700 rounded-full h-3">
+                <div 
+                  className="bg-gradient-to-r from-purple-600 to-purple-700 h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${(project.hours_worked / project.total_hours_estimated) * 100}%` }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Milestones */}
+      {project.milestones && project.milestones.length > 0 && (
+        <Card className="border border-slate-700 bg-slate-800/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Target className="h-5 w-5 text-blue-400" />
+              Hitos del Proyecto
+            </CardTitle>
+            <CardDescription className="text-slate-400">Fases y progreso del desarrollo</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {project.milestones.map((milestone, index) => (
+                <div 
+                  key={index}
+                  className="bg-slate-900/50 rounded-lg p-4 border border-slate-700"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        milestone.status === 'completado' ? 'bg-green-500/20' :
+                        milestone.status === 'en_progreso' ? 'bg-blue-500/20' :
+                        'bg-slate-700'
+                      }`}>
+                        {milestone.status === 'completado' ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-400" />
+                        ) : milestone.status === 'en_progreso' ? (
+                          <Clock className="h-5 w-5 text-blue-400" />
+                        ) : (
+                          <span className="text-slate-500 text-sm font-bold">{index + 1}</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{milestone.name}</p>
+                        <p className="text-xs text-slate-500 capitalize">{milestone.status.replace('_', ' ')}</p>
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-blue-400">{milestone.percentage}%</span>
+                  </div>
+                  <div className="w-full bg-slate-700 rounded-full h-2 mt-2">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        milestone.status === 'completado' ? 'bg-gradient-to-r from-green-600 to-green-700' :
+                        milestone.status === 'en_progreso' ? 'bg-gradient-to-r from-blue-600 to-blue-700' :
+                        'bg-slate-600'
+                      }`}
+                      style={{ width: `${milestone.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Team Members */}
+      {project.team_members && project.team_members.length > 0 && (
+        <Card className="border border-slate-700 bg-slate-800/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Users className="h-5 w-5 text-blue-400" />
+              Equipo de Desarrollo
+            </CardTitle>
+            <CardDescription className="text-slate-400">Miembros asignados al proyecto</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {project.team_members.map((member, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-3 p-4 bg-slate-900/50 rounded-lg border border-slate-700"
+                >
+                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-lg">{member.name.charAt(0)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white truncate">{member.name}</p>
+                    <p className="text-sm text-slate-400 truncate">{member.role}</p>
+                    <p className="text-xs text-slate-500 truncate">{member.email}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Client Info */}
       <Card className="border border-slate-700 bg-slate-800/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-white">
             <User className="h-5 w-5 text-blue-400" />
-            Información del Equipo
+            Información del Cliente
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -256,7 +441,7 @@ const ProjectView = () => {
               <p className="font-medium text-white">{user.name}</p>
               <p className="text-sm text-slate-400">{user.email}</p>
               <span className="inline-block mt-1 px-2 py-1 bg-blue-600 text-white text-xs rounded-full">
-                Miembro del Proyecto
+                Cliente del Proyecto
               </span>
             </div>
           </div>
