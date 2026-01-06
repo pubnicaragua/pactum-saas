@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -13,6 +14,8 @@ from datetime import datetime, timezone, timedelta
 import bcrypt
 import jwt
 from bson import ObjectId
+import pandas as pd
+import io
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -960,6 +963,119 @@ async def update_task_status(task_id: str, status: str, user: dict = Depends(get
     await log_activity("task", task_id, "status_changed", user, user["company_id"], {"status": status})
     
     return {"message": "Estado actualizado"}
+
+# ===================== TASKS EXCEL IMPORT/EXPORT =====================
+
+@api_router.get("/tasks/export")
+async def export_tasks_excel(project_id: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """Export tasks to Excel file"""
+    try:
+        query = {}
+        
+        if user["role"] == "USER":
+            user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in user_projects]
+            query["project_id"] = {"$in": project_ids}
+        else:
+            company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in company_projects]
+            query["project_id"] = {"$in": project_ids}
+        
+        if project_id:
+            query["project_id"] = project_id
+        
+        tasks = await db.tasks.find(query, {"_id": 0}).to_list(1000)
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(tasks)
+        
+        # Select and order columns
+        columns = ["title", "description", "status", "priority", "estimated_hours", "actual_hours", "due_date", "assigned_to", "tags"]
+        df = df[[col for col in columns if col in df.columns]]
+        
+        # Create Excel file in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Tareas')
+        output.seek(0)
+        
+        # Return as streaming response
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename=tareas_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"}
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al exportar tareas: {str(e)}")
+
+@api_router.post("/tasks/import")
+async def import_tasks_excel(
+    file: UploadFile = File(...),
+    project_id: str = Form(...),
+    user: dict = Depends(get_current_user)
+):
+    """Import tasks from Excel file"""
+    try:
+        # Verify project access
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+        
+        if user["role"] == "USER":
+            if user["id"] not in project.get("assigned_users", []):
+                raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+        elif project.get("company_id") != user["company_id"]:
+            raise HTTPException(status_code=403, detail="Acceso denegado")
+        
+        # Read Excel file
+        contents = await file.read()
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Validate required columns
+        required_columns = ["title"]
+        if not all(col in df.columns for col in required_columns):
+            raise HTTPException(status_code=400, detail="El archivo debe contener al menos la columna 'title'")
+        
+        # Import tasks
+        imported_count = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                task_id = str(uuid.uuid4())
+                task_doc = {
+                    "id": task_id,
+                    "project_id": project_id,
+                    "title": str(row["title"]),
+                    "description": str(row.get("description", "")) if pd.notna(row.get("description")) else "",
+                    "status": str(row.get("status", "backlog")),
+                    "priority": str(row.get("priority", "medium")),
+                    "estimated_hours": float(row.get("estimated_hours", 0)) if pd.notna(row.get("estimated_hours")) else 0,
+                    "actual_hours": float(row.get("actual_hours", 0)) if pd.notna(row.get("actual_hours")) else 0,
+                    "due_date": str(row.get("due_date")) if pd.notna(row.get("due_date")) else None,
+                    "assigned_to": str(row.get("assigned_to")) if pd.notna(row.get("assigned_to")) else None,
+                    "tags": str(row.get("tags", "")).split(",") if pd.notna(row.get("tags")) else [],
+                    "created_by": user["id"],
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                await db.tasks.insert_one(task_doc)
+                imported_count += 1
+            except Exception as e:
+                errors.append(f"Fila {index + 2}: {str(e)}")
+        
+        await log_activity("tasks", project_id, "imported", user, user["company_id"], {"count": imported_count})
+        
+        return {
+            "message": f"{imported_count} tareas importadas exitosamente",
+            "imported": imported_count,
+            "errors": errors
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al importar tareas: {str(e)}")
 
 # ===================== PAYMENTS MANAGEMENT =====================
 
