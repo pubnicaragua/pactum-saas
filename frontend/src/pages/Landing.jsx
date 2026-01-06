@@ -7,7 +7,7 @@ import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
-import { CheckCircle2, Users, Calendar, TrendingUp, Shield, Zap, ArrowRight, Sparkles } from 'lucide-react';
+import { CheckCircle2, Users, Calendar, TrendingUp, Shield, Zap, ArrowRight, Mountain } from 'lucide-react';
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -67,10 +67,10 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-lg flex items-center justify-center shadow-lg">
+                <Mountain className="h-6 w-6 text-white" />
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Pactum SaaS</span>
+              <span className="text-2xl font-bold text-gray-900">Pactum SaaS</span>
             </div>
           </div>
           <Button 
@@ -86,9 +86,9 @@ const Landing = () => {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full mb-6">
-            <Sparkles className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-600">Plataforma Multi-Tenant Enterprise</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-50 to-blue-100 rounded-full mb-6 border border-blue-200">
+            <Mountain className="h-4 w-4 text-blue-900" />
+            <span className="text-sm font-medium text-blue-900">Plataforma Multi-Tenant Enterprise</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
             Gestión Empresarial

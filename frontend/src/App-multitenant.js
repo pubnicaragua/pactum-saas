@@ -7,6 +7,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login-multitenant';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import CompanyDashboard from './pages/CompanyDashboard';
+import ProjectView from './pages/ProjectView';
 import ClientsManagement from './pages/ClientsManagement';
 import ActivitiesManagement from './pages/ActivitiesManagement';
 import DashboardLayout from './components/DashboardLayout-multitenant';
@@ -47,7 +48,17 @@ function AppRoutes() {
         </ProtectedRoute>
       }>
         <Route path="dashboard" element={
-          user?.role === 'SUPER_ADMIN' ? <SuperAdminDashboard /> : <CompanyDashboard />
+          user?.role === 'SUPER_ADMIN' 
+            ? <SuperAdminDashboard /> 
+            : user?.role === 'USER' 
+              ? <ProjectView />
+              : <CompanyDashboard />
+        } />
+        
+        <Route path="proyecto" element={
+          <ProtectedRoute>
+            <ProjectView />
+          </ProtectedRoute>
         } />
         
         <Route path="clientes" element={

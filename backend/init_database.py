@@ -125,6 +125,35 @@ async def seed_initial_data():
     await db.users.insert_one(bt_user_doc)
     print("✅ Usuario Business & Technology creado: activo2_26@gmail.com")
     
+    # Create project for Business & Technology user
+    bt_project_id = str(uuid.uuid4())
+    bt_project_doc = {
+        "id": bt_project_id,
+        "name": "Business & Technology - Sistema de Gestión",
+        "description": "Desarrollo de sistema de gestión empresarial completo con módulos de CRM, facturación y reportes",
+        "client_name": "Business & Technology",
+        "budget": 5200.00,
+        "status": "en_progreso",
+        "start_date": datetime.now(timezone.utc).isoformat(),
+        "end_date": (datetime.now(timezone.utc) + timedelta(days=90)).isoformat(),
+        "assigned_users": [bt_user_id],
+        "deliverables": [
+            "Módulo de CRM completo",
+            "Sistema de facturación",
+            "Dashboard de reportes",
+            "Integración con APIs externas",
+            "Documentación técnica"
+        ],
+        "notes": "Proyecto prioritario - Cliente Amaru José Mojica López",
+        "progress_percentage": 35,
+        "company_id": pactum_company_id,
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.projects.insert_one(bt_project_doc)
+    print("✅ Proyecto Business & Technology creado: $5,200")
+    
     # Create sample clients for demo company
     print("📝 Creando clientes de demostración...")
     for i in range(5):

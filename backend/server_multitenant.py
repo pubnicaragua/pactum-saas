@@ -144,6 +144,32 @@ class ActivityUpdate(BaseModel):
     priority: Optional[str] = None
     completed: Optional[bool] = None
 
+# Project Models
+class ProjectCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    client_name: str
+    budget: float
+    status: str = "en_progreso"  # planificacion, en_progreso, completado, pausado
+    start_date: str
+    end_date: Optional[str] = None
+    assigned_users: List[str] = []  # user IDs
+    deliverables: List[str] = []
+    notes: Optional[str] = None
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    client_name: Optional[str] = None
+    budget: Optional[float] = None
+    status: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    assigned_users: Optional[List[str]] = None
+    deliverables: Optional[List[str]] = None
+    notes: Optional[str] = None
+    progress_percentage: Optional[int] = None
+
 # Module Models
 class ModuleAssignment(BaseModel):
     company_id: str
@@ -655,6 +681,97 @@ async def delete_activity(activity_id: str, user: dict = Depends(get_current_use
     await log_activity("activity", activity_id, "deleted", user, activity.get("company_id"), {"title": activity.get("title")})
     
     return {"message": "Actividad eliminada"}
+
+# ===================== COMPANY - PROJECT MANAGEMENT =====================
+
+@api_router.get("/projects")
+async def get_projects(user: dict = Depends(get_current_user), company: dict = Depends(get_user_company)):
+    """Get all projects for the company or assigned to user"""
+    query = {"company_id": user["company_id"]}
+    
+    # If user is not admin, only show projects assigned to them
+    if user.get("role") == "USER":
+        query["assigned_users"] = user["id"]
+    
+    projects = await db.projects.find(query, {"_id": 0}).to_list(100)
+    return projects
+
+@api_router.post("/projects")
+async def create_project(data: ProjectCreate, user: dict = Depends(require_company_admin), company: dict = Depends(get_user_company)):
+    """Create a new project"""
+    project_id = str(uuid.uuid4())
+    project_doc = {
+        "id": project_id,
+        "name": data.name,
+        "description": data.description,
+        "client_name": data.client_name,
+        "budget": data.budget,
+        "status": data.status,
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "assigned_users": data.assigned_users,
+        "deliverables": data.deliverables,
+        "notes": data.notes,
+        "progress_percentage": 0,
+        "company_id": user["company_id"],
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.projects.insert_one(project_doc)
+    await log_activity("project", project_id, "created", user, user["company_id"], {"name": data.name})
+    
+    return {"id": project_id, "message": "Proyecto creado"}
+
+@api_router.get("/projects/{project_id}")
+async def get_project(project_id: str, user: dict = Depends(get_current_user), company: dict = Depends(get_user_company)):
+    """Get project details"""
+    project = await db.projects.find_one({"id": project_id}, {"_id": 0})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Verify access
+    if project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    # If user is not admin, verify they are assigned to the project
+    if user.get("role") == "USER" and user["id"] not in project.get("assigned_users", []):
+        raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    
+    return project
+
+@api_router.put("/projects/{project_id}")
+async def update_project(project_id: str, data: ProjectUpdate, user: dict = Depends(require_company_admin), company: dict = Depends(get_user_company)):
+    """Update project"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    update_data = {k: v for k, v in data.dict(exclude_unset=True).items()}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.projects.update_one({"id": project_id}, {"$set": update_data})
+    await log_activity("project", project_id, "updated", user, user["company_id"], update_data)
+    
+    return {"message": "Proyecto actualizado"}
+
+@api_router.delete("/projects/{project_id}")
+async def delete_project(project_id: str, user: dict = Depends(require_company_admin), company: dict = Depends(get_user_company)):
+    """Delete project"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    await db.projects.delete_one({"id": project_id})
+    await log_activity("project", project_id, "deleted", user, project.get("company_id"), {"name": project.get("name")})
+    
+    return {"message": "Proyecto eliminado"}
 
 # ===================== COMPANY - USER MANAGEMENT =====================
 

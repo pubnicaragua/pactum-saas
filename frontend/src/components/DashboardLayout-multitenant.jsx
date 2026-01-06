@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
-import { Building2, LayoutDashboard, Users, Calendar, LogOut, Menu, X, Shield } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, Calendar, LogOut, Menu, X, Shield, Briefcase, Mountain } from 'lucide-react';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -14,9 +14,12 @@ const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const isRegularUser = user?.role === 'USER';
 
   const navigation = isSuperAdmin ? [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  ] : isRegularUser ? [
+    { name: 'Mi Proyecto', href: '/proyecto', icon: Briefcase },
   ] : [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Clientes', href: '/clientes', icon: Users },
@@ -45,7 +48,9 @@ const DashboardLayout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center gap-2 px-6 py-4 border-b border-slate-800">
-            <Building2 className="h-8 w-8 text-blue-400" />
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-lg flex items-center justify-center shadow-lg">
+              <Mountain className="h-6 w-6 text-white" />
+            </div>
             <div className="flex-1">
               <h1 className="text-xl font-bold text-white">Pactum SaaS</h1>
               {user?.company_name && (

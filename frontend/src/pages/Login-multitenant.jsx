@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
-import { LogIn, Sparkles } from 'lucide-react';
+import { LogIn, Mountain } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -36,10 +36,10 @@ const Login = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-              <Sparkles className="h-6 w-6 text-white" />
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 rounded-lg flex items-center justify-center shadow-lg">
+              <Mountain className="h-7 w-7 text-white" />
             </div>
-            <span className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Pactum SaaS</span>
+            <span className="text-3xl font-bold text-gray-900">Pactum SaaS</span>
           </div>
           <p className="text-gray-600 text-lg">Multi-ERP / Multi-CRM Platform</p>
         </div>
