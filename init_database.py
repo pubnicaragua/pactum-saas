@@ -117,110 +117,137 @@ async def seed_initial_data():
     await db.projects.insert_one(amaru_project_doc)
     print("✅ Proyecto Amaru Mojica creado: $5,200")
     
-    # Create Alma IA company
-    alma_company_id = str(uuid.uuid4())
-    alma_company_doc = {
-        "id": alma_company_id,
-        "name": "Alma IA",
-        "email": "contacto@almaia.com",
-        "phone": "+505 8888-1111",
-        "logo_url": None,
-        "primary_color": "#8b5cf6",
-        "secondary_color": "#7c3aed",
-        "status": "active",
-        "subscription_status": "active",
-        "trial_ends_at": None,
-        "active_modules": ["clients", "activities", "calendar", "pipeline", "projects", "invoicing", "reports"],
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.companies.insert_one(alma_company_doc)
-    print("✅ Empresa creada: Alma IA")
-    
-    # Create admin for Alma IA
-    alma_admin_id = str(uuid.uuid4())
-    alma_admin_doc = {
-        "id": alma_admin_id,
+    # Create Alma IA user (Partner/Cliente)
+    alma_user_id = str(uuid.uuid4())
+    alma_user_doc = {
+        "id": alma_user_id,
         "email": "admin@almaia.com",
         "password": hash_password("AlmaIA#2026!"),
-        "name": "Alma IA Admin",
-        "role": "COMPANY_ADMIN",
-        "company_id": alma_company_id,
+        "name": "Alma IA",
+        "role": "USER",
+        "company_id": pactum_company_id,
         "status": "active",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.users.insert_one(alma_admin_doc)
-    print("✅ Admin Alma IA creado: admin@almaia.com")
+    await db.users.insert_one(alma_user_doc)
+    print("✅ Usuario Partner creado: admin@almaia.com (Alma IA)")
     
-    # Create Investi company
-    investi_company_id = str(uuid.uuid4())
-    investi_company_doc = {
-        "id": investi_company_id,
-        "name": "Investi",
-        "email": "contacto@investi.com",
-        "phone": "+505 8888-2222",
-        "logo_url": None,
-        "primary_color": "#f59e0b",
-        "secondary_color": "#d97706",
-        "status": "active",
-        "subscription_status": "active",
-        "trial_ends_at": None,
-        "active_modules": ["clients", "activities", "calendar", "pipeline", "projects", "invoicing", "reports"],
+    # Create project for Alma IA
+    alma_project_id = str(uuid.uuid4())
+    alma_project_doc = {
+        "id": alma_project_id,
+        "name": "Alma IA - Plataforma de Inteligencia Artificial",
+        "description": "Desarrollo de plataforma de IA con procesamiento de lenguaje natural y análisis predictivo",
+        "client_name": "Alma IA",
+        "budget": 8500.00,
+        "status": "en_progreso",
+        "start_date": datetime.now(timezone.utc).isoformat(),
+        "end_date": (datetime.now(timezone.utc) + timedelta(days=120)).isoformat(),
+        "assigned_users": [alma_user_id],
+        "deliverables": [
+            "API de procesamiento de lenguaje natural",
+            "Dashboard de análisis predictivo",
+            "Sistema de entrenamiento de modelos",
+            "Integración con servicios cloud",
+            "Documentación técnica completa"
+        ],
+        "notes": "Proyecto partner - Alma IA en producción",
+        "progress_percentage": 45,
+        "company_id": pactum_company_id,
+        "created_by": pactum_admin_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.companies.insert_one(investi_company_doc)
-    print("✅ Empresa creada: Investi")
+    await db.projects.insert_one(alma_project_doc)
+    print("✅ Proyecto Alma IA creado: $8,500")
     
-    # Create admin for Investi
-    investi_admin_id = str(uuid.uuid4())
-    investi_admin_doc = {
-        "id": investi_admin_id,
+    # Create Investi user (Partner/Cliente)
+    investi_user_id = str(uuid.uuid4())
+    investi_user_doc = {
+        "id": investi_user_id,
         "email": "admin@investi.com",
         "password": hash_password("Investi#2026!"),
-        "name": "Investi Admin",
-        "role": "COMPANY_ADMIN",
-        "company_id": investi_company_id,
+        "name": "Investi",
+        "role": "USER",
+        "company_id": pactum_company_id,
         "status": "active",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.users.insert_one(investi_admin_doc)
-    print("✅ Admin Investi creado: admin@investi.com")
+    await db.users.insert_one(investi_user_doc)
+    print("✅ Usuario Partner creado: admin@investi.com (Investi)")
     
-    # Create Solvendo company
-    solvendo_company_id = str(uuid.uuid4())
-    solvendo_company_doc = {
-        "id": solvendo_company_id,
-        "name": "Solvendo",
-        "email": "contacto@solvendo.com",
-        "phone": "+505 8888-3333",
-        "logo_url": None,
-        "primary_color": "#10b981",
-        "secondary_color": "#059669",
-        "status": "active",
-        "subscription_status": "active",
-        "trial_ends_at": None,
-        "active_modules": ["clients", "activities", "calendar", "pipeline", "projects", "invoicing", "reports"],
+    # Create project for Investi
+    investi_project_id = str(uuid.uuid4())
+    investi_project_doc = {
+        "id": investi_project_id,
+        "name": "Investi - Sistema de Gestión de Inversiones",
+        "description": "Plataforma completa para gestión de portafolios de inversión y análisis financiero",
+        "client_name": "Investi",
+        "budget": 12000.00,
+        "status": "en_progreso",
+        "start_date": datetime.now(timezone.utc).isoformat(),
+        "end_date": (datetime.now(timezone.utc) + timedelta(days=150)).isoformat(),
+        "assigned_users": [investi_user_id],
+        "deliverables": [
+            "Sistema de gestión de portafolios",
+            "Análisis financiero en tiempo real",
+            "Reportes automatizados",
+            "Integración con APIs bancarias",
+            "App móvil iOS y Android"
+        ],
+        "notes": "Proyecto partner - Investi en producción",
+        "progress_percentage": 60,
+        "company_id": pactum_company_id,
+        "created_by": pactum_admin_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.companies.insert_one(solvendo_company_doc)
-    print("✅ Empresa creada: Solvendo")
+    await db.projects.insert_one(investi_project_doc)
+    print("✅ Proyecto Investi creado: $12,000")
     
-    # Create admin for Solvendo
-    solvendo_admin_id = str(uuid.uuid4())
-    solvendo_admin_doc = {
-        "id": solvendo_admin_id,
+    # Create Solvendo user (Partner/Cliente)
+    solvendo_user_id = str(uuid.uuid4())
+    solvendo_user_doc = {
+        "id": solvendo_user_id,
         "email": "admin@solvendo.com",
         "password": hash_password("Solvendo#2026!"),
-        "name": "Solvendo Admin",
-        "role": "COMPANY_ADMIN",
-        "company_id": solvendo_company_id,
+        "name": "Solvendo",
+        "role": "USER",
+        "company_id": pactum_company_id,
         "status": "active",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.users.insert_one(solvendo_admin_doc)
-    print("✅ Admin Solvendo creado: admin@solvendo.com")
+    await db.users.insert_one(solvendo_user_doc)
+    print("✅ Usuario Partner creado: admin@solvendo.com (Solvendo)")
+    
+    # Create project for Solvendo
+    solvendo_project_id = str(uuid.uuid4())
+    solvendo_project_doc = {
+        "id": solvendo_project_id,
+        "name": "Solvendo - Plataforma de Soluciones Empresariales",
+        "description": "Sistema ERP completo con módulos de contabilidad, inventario y recursos humanos",
+        "client_name": "Solvendo",
+        "budget": 15000.00,
+        "status": "en_progreso",
+        "start_date": datetime.now(timezone.utc).isoformat(),
+        "end_date": (datetime.now(timezone.utc) + timedelta(days=180)).isoformat(),
+        "assigned_users": [solvendo_user_id],
+        "deliverables": [
+            "Módulo de contabilidad completo",
+            "Sistema de inventario y almacén",
+            "Gestión de recursos humanos",
+            "Reportes financieros avanzados",
+            "Integración con sistemas externos"
+        ],
+        "notes": "Proyecto partner - Solvendo en producción",
+        "progress_percentage": 55,
+        "company_id": pactum_company_id,
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.projects.insert_one(solvendo_project_doc)
+    print("✅ Proyecto Solvendo creado: $15,000")
     
     # Create demo company
     demo_company_id = str(uuid.uuid4())
@@ -330,25 +357,25 @@ async def seed_initial_data():
     print("   Password: Pactum#2026!")
     print("   Acceso:   Gestión completa de empresa\n")
     
-    print("🔵 AMARU MOJICA (Usuario - Proyecto $5,200):")
+    print("🔵 AMARU MOJICA (Cliente - Proyecto $5,200):")
     print("   Email:    activo2_26@gmail.com")
     print("   Password: Pactum#2026!")
     print("   Acceso:   Ver su proyecto asignado\n")
     
-    print("🟣 ALMA IA (Partner Company):")
+    print("🟣 ALMA IA (Cliente/Partner - Proyecto $8,500):")
     print("   Email:    admin@almaia.com")
     print("   Password: AlmaIA#2026!")
-    print("   Acceso:   Gestión de empresa partner\n")
+    print("   Acceso:   Ver su proyecto asignado\n")
     
-    print("🟠 INVESTI (Partner Company):")
+    print("🟠 INVESTI (Cliente/Partner - Proyecto $12,000):")
     print("   Email:    admin@investi.com")
     print("   Password: Investi#2026!")
-    print("   Acceso:   Gestión de empresa partner\n")
+    print("   Acceso:   Ver su proyecto asignado\n")
     
-    print("🟢 SOLVENDO (Partner Company):")
+    print("🟢 SOLVENDO (Cliente/Partner - Proyecto $15,000):")
     print("   Email:    admin@solvendo.com")
     print("   Password: Solvendo#2026!")
-    print("   Acceso:   Gestión de empresa partner\n")
+    print("   Acceso:   Ver su proyecto asignado\n")
     
     print("🟡 EMPRESA DEMO (Trial 14 días):")
     print("   Email:    admin@demo.com")
