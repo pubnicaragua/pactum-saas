@@ -8,7 +8,11 @@ import Login from './pages/Login-multitenant';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import CompanyDashboard from './pages/CompanyDashboard';
 import ProjectView from './pages/ProjectView';
+import TaskList from './pages/TaskList';
 import TaskBoard from './pages/TaskBoard';
+import ProjectPayments from './pages/ProjectPayments';
+import ProjectPhases from './pages/ProjectPhases';
+import ProjectContract from './pages/ProjectContract';
 import ClientsManagement from './pages/ClientsManagement';
 import ActivitiesManagement from './pages/ActivitiesManagement';
 import DashboardLayout from './components/DashboardLayout-multitenant';
@@ -62,15 +66,45 @@ function AppRoutes() {
           </ProtectedRoute>
         } />
         
+        <Route path="dashboard-proyecto" element={
+          <ProtectedRoute>
+            <ProjectView />
+          </ProtectedRoute>
+        } />
+        
         <Route path="tareas" element={
           <ProtectedRoute>
-            <TaskBoard />
+            <TaskList />
           </ProtectedRoute>
         } />
         
         <Route path="kanban" element={
           <ProtectedRoute>
             <TaskBoard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="fases" element={
+          <ProtectedRoute>
+            <ProjectPhases />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="pagos" element={
+          <ProtectedRoute>
+            <ProjectPayments />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="contrato" element={
+          <ProtectedRoute>
+            <ProjectContract />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="actividades-proyecto" element={
+          <ProtectedRoute>
+            <ActivitiesManagement />
           </ProtectedRoute>
         } />
         
