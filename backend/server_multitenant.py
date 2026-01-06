@@ -193,6 +193,40 @@ class TaskUpdate(BaseModel):
     tags: Optional[List[str]] = None
     actual_hours: Optional[float] = None
 
+# Payment Models
+class PaymentCreate(BaseModel):
+    project_id: str
+    payment_number: int
+    description: str
+    amount: float
+    percentage: int
+    due_date: str
+    notes: Optional[str] = None
+
+class PaymentUpdate(BaseModel):
+    status: Optional[str] = None  # pendiente, pagado, vencido
+    paid_date: Optional[str] = None
+    payment_method: Optional[str] = None
+    receipt_url: Optional[str] = None
+    notes: Optional[str] = None
+
+# Phase Models
+class PhaseCreate(BaseModel):
+    project_id: str
+    name: str
+    description: Optional[str] = None
+    order: int
+    estimated_days: int
+    start_date: str
+
+class PhaseUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    status: Optional[str] = None  # pendiente, en_progreso, completado
+    progress: Optional[int] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
 # Module Models
 class ModuleAssignment(BaseModel):
     company_id: str
@@ -926,6 +960,161 @@ async def update_task_status(task_id: str, status: str, user: dict = Depends(get
     await log_activity("task", task_id, "status_changed", user, user["company_id"], {"status": status})
     
     return {"message": "Estado actualizado"}
+
+# ===================== PAYMENTS MANAGEMENT =====================
+
+@api_router.get("/payments")
+async def get_payments(project_id: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """Get payments for user's projects"""
+    query = {}
+    
+    if user["role"] == "USER":
+        user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+        project_ids = [p["id"] for p in user_projects]
+        query["project_id"] = {"$in": project_ids}
+    else:
+        company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
+        project_ids = [p["id"] for p in company_projects]
+        query["project_id"] = {"$in": project_ids}
+    
+    if project_id:
+        query["project_id"] = project_id
+    
+    payments = await db.payments.find(query, {"_id": 0}).sort("payment_number", 1).to_list(100)
+    return payments
+
+@api_router.post("/payments")
+async def create_payment(data: PaymentCreate, user: dict = Depends(get_current_user)):
+    """Create a new payment"""
+    project = await db.projects.find_one({"id": data.project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    payment_id = str(uuid.uuid4())
+    payment_doc = {
+        "id": payment_id,
+        **data.dict(),
+        "status": "pendiente",
+        "paid_date": None,
+        "payment_method": None,
+        "receipt_url": None,
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.payments.insert_one(payment_doc)
+    await log_activity("payment", payment_id, "created", user, user["company_id"], {"amount": data.amount})
+    
+    return {"id": payment_id, "message": "Pago creado"}
+
+@api_router.put("/payments/{payment_id}")
+async def update_payment(payment_id: str, data: PaymentUpdate, user: dict = Depends(get_current_user)):
+    """Update payment"""
+    payment = await db.payments.find_one({"id": payment_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+    
+    project = await db.projects.find_one({"id": payment["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    update_data = {k: v for k, v in data.dict(exclude_unset=True).items()}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.payments.update_one({"id": payment_id}, {"$set": update_data})
+    await log_activity("payment", payment_id, "updated", user, user["company_id"], update_data)
+    
+    return {"message": "Pago actualizado"}
+
+# ===================== PHASES MANAGEMENT =====================
+
+@api_router.get("/phases")
+async def get_phases(project_id: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """Get phases for user's projects"""
+    query = {}
+    
+    if user["role"] == "USER":
+        user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+        project_ids = [p["id"] for p in user_projects]
+        query["project_id"] = {"$in": project_ids}
+    else:
+        company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
+        project_ids = [p["id"] for p in company_projects]
+        query["project_id"] = {"$in": project_ids}
+    
+    if project_id:
+        query["project_id"] = project_id
+    
+    phases = await db.phases.find(query, {"_id": 0}).sort("order", 1).to_list(100)
+    return phases
+
+@api_router.post("/phases")
+async def create_phase(data: PhaseCreate, user: dict = Depends(get_current_user)):
+    """Create a new phase"""
+    project = await db.projects.find_one({"id": data.project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    phase_id = str(uuid.uuid4())
+    phase_doc = {
+        "id": phase_id,
+        **data.dict(),
+        "status": "pendiente",
+        "progress": 0,
+        "end_date": None,
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.phases.insert_one(phase_doc)
+    await log_activity("phase", phase_id, "created", user, user["company_id"], {"name": data.name})
+    
+    return {"id": phase_id, "message": "Fase creada"}
+
+@api_router.put("/phases/{phase_id}")
+async def update_phase(phase_id: str, data: PhaseUpdate, user: dict = Depends(get_current_user)):
+    """Update phase"""
+    phase = await db.phases.find_one({"id": phase_id})
+    if not phase:
+        raise HTTPException(status_code=404, detail="Fase no encontrada")
+    
+    project = await db.projects.find_one({"id": phase["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    update_data = {k: v for k, v in data.dict(exclude_unset=True).items()}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.phases.update_one({"id": phase_id}, {"$set": update_data})
+    await log_activity("phase", phase_id, "updated", user, user["company_id"], update_data)
+    
+    return {"message": "Fase actualizada"}
 
 # ===================== COMPANY - USER MANAGEMENT =====================
 

@@ -158,24 +158,9 @@ async def seed_initial_data():
             "52. Capacitación y soporte post-entrega"
         ],
         "notes": "Contrato firmado el " + datetime.now(timezone.utc).strftime("%d/%m/%Y") + ". Proyecto prioritario con 52 entregables específicos. Incluye 3 meses de soporte post-entrega. Reuniones semanales de seguimiento cada viernes. Cliente requiere actualizaciones diarias por WhatsApp.",
-        "progress_percentage": 35,
+        "progress_percentage": 0,
         "total_hours_estimated": 520,
-        "hours_worked": 182,
-        "milestones": [
-            {"name": "Fase 1: Análisis y Diseño", "status": "completado", "percentage": 100},
-            {"name": "Fase 2: Desarrollo Backend (Módulos 1-20)", "status": "en_progreso", "percentage": 45},
-            {"name": "Fase 3: Desarrollo Frontend (Módulos 1-20)", "status": "en_progreso", "percentage": 30},
-            {"name": "Fase 4: Desarrollo Módulos Avanzados (21-40)", "status": "pendiente", "percentage": 0},
-            {"name": "Fase 5: Integraciones y APIs (41-52)", "status": "pendiente", "percentage": 0},
-            {"name": "Fase 6: Testing y QA", "status": "pendiente", "percentage": 0},
-            {"name": "Fase 7: Despliegue y Capacitación", "status": "pendiente", "percentage": 0}
-        ],
-        "team_members": [
-            {"name": "Juan Pérez", "role": "Backend Developer", "email": "juan@softwarenicaragua.com"},
-            {"name": "María García", "role": "Frontend Developer", "email": "maria@softwarenicaragua.com"},
-            {"name": "Carlos López", "role": "UI/UX Designer", "email": "carlos@softwarenicaragua.com"},
-            {"name": "Ana Martínez", "role": "QA Tester", "email": "ana@softwarenicaragua.com"}
-        ],
+        "hours_worked": 0,
         "company_id": pactum_company_id,
         "created_by": pactum_admin_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -241,12 +226,7 @@ async def seed_initial_data():
         "Capacitación y soporte post-entrega"
     ]
     
-    statuses = ["done", "done", "done", "in_progress", "in_progress", "in_progress", "in_progress", "in_progress", 
-                "todo", "todo", "todo", "todo", "todo", "backlog", "backlog", "backlog", "backlog", "backlog",
-                "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog",
-                "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog",
-                "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog",
-                "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog"]
+    statuses = ["backlog"] * 52  # Todas las tareas empiezan en backlog (0% progreso)
     
     priorities = ["high", "high", "high", "high", "medium", "medium", "medium", "medium", "medium", "medium",
                   "medium", "medium", "medium", "low", "low", "low", "low", "low", "low", "low",
@@ -279,6 +259,99 @@ async def seed_initial_data():
         await db.tasks.insert_one(task_doc)
     
     print(f"✅ {len(task_titles)} tareas creadas para Amaru Mojica")
+    
+    # Create Phases for Amaru's project
+    print("📊 Creando fases del proyecto...")
+    phases_data = [
+        {"name": "Fase 1: Análisis y Diseño", "description": "Levantamiento de requerimientos, diseño de arquitectura y mockups", "order": 1, "status": "pendiente", "progress": 0, "start_date": datetime.now(timezone.utc).isoformat(), "estimated_days": 15},
+        {"name": "Fase 2: Desarrollo Backend (Módulos 1-20)", "description": "Desarrollo de APIs, base de datos y lógica de negocio para los primeros 20 módulos", "order": 2, "status": "pendiente", "progress": 0, "start_date": (datetime.now(timezone.utc) + timedelta(days=15)).isoformat(), "estimated_days": 25},
+        {"name": "Fase 3: Desarrollo Frontend (Módulos 1-20)", "description": "Interfaces de usuario, componentes y vistas para los primeros 20 módulos", "order": 3, "status": "pendiente", "progress": 0, "start_date": (datetime.now(timezone.utc) + timedelta(days=40)).isoformat(), "estimated_days": 20},
+        {"name": "Fase 4: Desarrollo Módulos Avanzados (21-40)", "description": "Implementación de módulos avanzados de integración y análisis", "order": 4, "status": "pendiente", "progress": 0, "start_date": (datetime.now(timezone.utc) + timedelta(days=60)).isoformat(), "estimated_days": 20},
+        {"name": "Fase 5: Integraciones y APIs (41-52)", "description": "Integración con servicios externos, APIs y documentación", "order": 5, "status": "pendiente", "progress": 0, "start_date": (datetime.now(timezone.utc) + timedelta(days=80)).isoformat(), "estimated_days": 15},
+        {"name": "Fase 6: Testing y QA", "description": "Pruebas exhaustivas, corrección de bugs y optimización", "order": 6, "status": "pendiente", "progress": 0, "start_date": (datetime.now(timezone.utc) + timedelta(days=95)).isoformat(), "estimated_days": 10},
+        {"name": "Fase 7: Despliegue y Capacitación", "description": "Despliegue a producción, capacitación al cliente y entrega final", "order": 7, "status": "pendiente", "progress": 0, "start_date": (datetime.now(timezone.utc) + timedelta(days=105)).isoformat(), "estimated_days": 5}
+    ]
+    
+    for phase_data in phases_data:
+        phase_id = str(uuid.uuid4())
+        phase_doc = {
+            "id": phase_id,
+            "project_id": amaru_project_id,
+            **phase_data,
+            "created_by": pactum_admin_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.phases.insert_one(phase_doc)
+    
+    print(f"✅ {len(phases_data)} fases creadas para el proyecto")
+    
+    # Create Payments for Amaru's project
+    print("💰 Creando sistema de pagos...")
+    payments_data = [
+        {
+            "payment_number": 1,
+            "description": "Pago inicial - 25% del proyecto",
+            "amount": 1300.00,
+            "percentage": 25,
+            "status": "pagado",
+            "due_date": datetime.now(timezone.utc).isoformat(),
+            "paid_date": datetime.now(timezone.utc).isoformat(),
+            "payment_method": "Transferencia bancaria",
+            "receipt_url": None,
+            "notes": "Primer pago recibido. Comprobante pendiente de subir."
+        },
+        {
+            "payment_number": 2,
+            "description": "Segundo pago - 25% al 50% de avance",
+            "amount": 1300.00,
+            "percentage": 25,
+            "status": "pendiente",
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=45)).isoformat(),
+            "paid_date": None,
+            "payment_method": None,
+            "receipt_url": None,
+            "notes": "Pago programado para cuando se alcance el 50% de avance del proyecto"
+        },
+        {
+            "payment_number": 3,
+            "description": "Tercer pago - 25% al 75% de avance",
+            "amount": 1300.00,
+            "percentage": 25,
+            "status": "pendiente",
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=75)).isoformat(),
+            "paid_date": None,
+            "payment_method": None,
+            "receipt_url": None,
+            "notes": "Pago programado para cuando se alcance el 75% de avance del proyecto"
+        },
+        {
+            "payment_number": 4,
+            "description": "Pago final - 25% a la entrega",
+            "amount": 1300.00,
+            "percentage": 25,
+            "status": "pendiente",
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=90)).isoformat(),
+            "paid_date": None,
+            "payment_method": None,
+            "receipt_url": None,
+            "notes": "Pago final al completar el 100% del proyecto y entrega"
+        }
+    ]
+    
+    for payment_data in payments_data:
+        payment_id = str(uuid.uuid4())
+        payment_doc = {
+            "id": payment_id,
+            "project_id": amaru_project_id,
+            **payment_data,
+            "created_by": pactum_admin_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.payments.insert_one(payment_doc)
+    
+    print(f"✅ {len(payments_data)} pagos creados (1 pagado, 3 pendientes)")
     
     # Create Alma IA user (Partner/Cliente)
     alma_user_id = str(uuid.uuid4())
