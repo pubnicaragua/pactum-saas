@@ -139,6 +139,26 @@ export const deleteTask = (id) =>
 export const updateTaskStatus = (id, status) => 
   api.patch(`/tasks/${id}/status`, null, { params: { status } });
 
+// Payments
+export const getPayments = (projectId = null) => 
+  api.get('/payments', { params: { project_id: projectId } });
+
+export const createPayment = (data) => 
+  api.post('/payments', data);
+
+export const updatePayment = (id, data) => 
+  api.put(`/payments/${id}`, data);
+
+// Phases
+export const getPhases = (projectId = null) => 
+  api.get('/phases', { params: { project_id: projectId } });
+
+export const createPhase = (data) => 
+  api.post('/phases', data);
+
+export const updatePhase = (id, data) => 
+  api.put(`/phases/${id}`, data);
+
 // Activity Logs
 export const getActivityLogs = (entityType, limit = 100) => 
   api.get('/activity-logs', { params: { entity_type: entityType, limit } });

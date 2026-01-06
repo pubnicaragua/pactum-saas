@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../lib/auth-multitenant';
-import { getTasks, updateTaskStatus, createTask, updateTask, deleteTask } from '../lib/api-multitenant';
+import { getTasks, createTask, updateTask, deleteTask } from '../lib/api-multitenant';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -14,20 +14,20 @@ import {
   ListTodo, 
   Plus, 
   Clock, 
-  AlertCircle,
-  CheckCircle2,
   Trash2,
   Edit,
-  GripVertical
+  CheckCircle2,
+  Circle,
+  AlertCircle
 } from 'lucide-react';
 
-const TaskBoard = () => {
+const TaskList = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
-  const [draggedTask, setDraggedTask] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -53,18 +53,6 @@ const TaskBoard = () => {
     }
   };
 
-  const columns = [
-    { id: 'backlog', title: 'Backlog', color: 'slate', icon: ListTodo },
-    { id: 'todo', title: 'Por Hacer', color: 'blue', icon: Clock },
-    { id: 'in_progress', title: 'En Progreso', color: 'yellow', icon: AlertCircle },
-    { id: 'review', title: 'En Revisión', color: 'purple', icon: CheckCircle2 },
-    { id: 'done', title: 'Completado', color: 'green', icon: CheckCircle2 }
-  ];
-
-  const getTasksByStatus = (status) => {
-    return tasks.filter(task => task.status === status);
-  };
-
   const getPriorityColor = (priority) => {
     const colors = {
       low: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
@@ -75,32 +63,37 @@ const TaskBoard = () => {
     return colors[priority] || colors.medium;
   };
 
-  const handleDragStart = (e, task) => {
-    setDraggedTask(task);
-    e.dataTransfer.effectAllowed = 'move';
+  const getStatusIcon = (status) => {
+    const icons = {
+      backlog: Circle,
+      todo: Circle,
+      in_progress: AlertCircle,
+      review: Clock,
+      done: CheckCircle2
+    };
+    return icons[status] || Circle;
   };
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+  const getStatusColor = (status) => {
+    const colors = {
+      backlog: 'text-slate-400',
+      todo: 'text-blue-400',
+      in_progress: 'text-yellow-400',
+      review: 'text-purple-400',
+      done: 'text-green-400'
+    };
+    return colors[status] || 'text-slate-400';
   };
 
-  const handleDrop = async (e, newStatus) => {
-    e.preventDefault();
-    if (!draggedTask || draggedTask.status === newStatus) return;
-
-    try {
-      await updateTaskStatus(draggedTask.id, newStatus);
-      setTasks(tasks.map(task => 
-        task.id === draggedTask.id ? { ...task, status: newStatus } : task
-      ));
-      toast.success('Estado actualizado');
-    } catch (error) {
-      toast.error('Error al actualizar estado');
-      console.error(error);
-    } finally {
-      setDraggedTask(null);
-    }
+  const getStatusLabel = (status) => {
+    const labels = {
+      backlog: 'Backlog',
+      todo: 'Por Hacer',
+      in_progress: 'En Progreso',
+      review: 'En Revisión',
+      done: 'Completado'
+    };
+    return labels[status] || status;
   };
 
   const handleSubmit = async (e) => {
@@ -161,6 +154,18 @@ const TaskBoard = () => {
     }
   };
 
+  const filteredTasks = filterStatus === 'all' 
+    ? tasks 
+    : tasks.filter(t => t.status === filterStatus);
+
+  const taskStats = {
+    total: tasks.length,
+    backlog: tasks.filter(t => t.status === 'backlog').length,
+    todo: tasks.filter(t => t.status === 'todo').length,
+    in_progress: tasks.filter(t => t.status === 'in_progress').length,
+    done: tasks.filter(t => t.status === 'done').length
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -174,8 +179,8 @@ const TaskBoard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Tablero de Tareas</h1>
-          <p className="text-slate-400 mt-1">Gestiona tus tareas con vista Kanban</p>
+          <h1 className="text-3xl font-bold text-white">Lista de Tareas</h1>
+          <p className="text-slate-400 mt-1">Gestiona todas tus tareas en formato lista</p>
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -262,59 +267,116 @@ const TaskBoard = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {columns.map(column => {
-          const count = getTasksByStatus(column.id).length;
-          return (
-            <Card key={column.id} className="border-slate-700 bg-slate-800/50">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-400">{column.title}</p>
-                    <p className="text-2xl font-bold text-white">{count}</p>
-                  </div>
-                  <column.icon className={`h-8 w-8 text-${column.color}-400`} />
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        <Card className="border-slate-700 bg-slate-800/50 cursor-pointer hover:bg-slate-800/70 transition-colors"
+              onClick={() => setFilterStatus('all')}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">Total</p>
+                <p className="text-2xl font-bold text-white">{taskStats.total}</p>
+              </div>
+              <ListTodo className="h-8 w-8 text-slate-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-700 bg-slate-800/50 cursor-pointer hover:bg-slate-800/70 transition-colors"
+              onClick={() => setFilterStatus('backlog')}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">Backlog</p>
+                <p className="text-2xl font-bold text-white">{taskStats.backlog}</p>
+              </div>
+              <Circle className="h-8 w-8 text-slate-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-700 bg-slate-800/50 cursor-pointer hover:bg-slate-800/70 transition-colors"
+              onClick={() => setFilterStatus('todo')}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">Por Hacer</p>
+                <p className="text-2xl font-bold text-white">{taskStats.todo}</p>
+              </div>
+              <Circle className="h-8 w-8 text-blue-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-700 bg-slate-800/50 cursor-pointer hover:bg-slate-800/70 transition-colors"
+              onClick={() => setFilterStatus('in_progress')}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">En Progreso</p>
+                <p className="text-2xl font-bold text-white">{taskStats.in_progress}</p>
+              </div>
+              <AlertCircle className="h-8 w-8 text-yellow-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-700 bg-slate-800/50 cursor-pointer hover:bg-slate-800/70 transition-colors"
+              onClick={() => setFilterStatus('done')}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-400">Completado</p>
+                <p className="text-2xl font-bold text-white">{taskStats.done}</p>
+              </div>
+              <CheckCircle2 className="h-8 w-8 text-green-400" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {columns.map(column => (
-          <div
-            key={column.id}
-            className="flex-shrink-0 w-80"
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, column.id)}
+      {/* Filter Info */}
+      {filterStatus !== 'all' && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-sm">
+            Filtrando por: {getStatusLabel(filterStatus)}
+          </Badge>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => setFilterStatus('all')}
+            className="text-slate-400 hover:text-white"
           >
-            <Card className="border-slate-700 bg-slate-800/30 h-full">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-300 flex items-center gap-2">
-                  <column.icon className={`h-4 w-4 text-${column.color}-400`} />
-                  {column.title}
-                  <Badge variant="secondary" className="ml-auto">
-                    {getTasksByStatus(column.id).length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
-                {getTasksByStatus(column.id).map(task => (
-                  <div
-                    key={task.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, task)}
-                    className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 cursor-move hover:border-blue-500 transition-colors group"
-                  >
-                    <div className="flex items-start gap-2">
-                      <GripVertical className="h-4 w-4 text-slate-600 mt-1 flex-shrink-0" />
+            Limpiar filtro
+          </Button>
+        </div>
+      )}
+
+      {/* Task List */}
+      <Card className="border-slate-700 bg-slate-800/50">
+        <CardHeader>
+          <CardTitle className="text-white">
+            {filterStatus === 'all' ? 'Todas las Tareas' : getStatusLabel(filterStatus)}
+            <span className="text-slate-400 text-sm ml-2">({filteredTasks.length})</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {filteredTasks.map(task => {
+              const StatusIcon = getStatusIcon(task.status);
+              return (
+                <div
+                  key={task.id}
+                  className="flex items-start gap-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700 hover:border-blue-500/50 transition-colors group"
+                >
+                  <StatusIcon className={`h-5 w-5 mt-0.5 flex-shrink-0 ${getStatusColor(task.status)}`} />
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-white mb-1 line-clamp-2">
+                        <h4 className="text-sm font-medium text-white mb-1">
                           {task.title}
                         </h4>
                         {task.description && (
-                          <p className="text-xs text-slate-400 mb-2 line-clamp-2">
+                          <p className="text-xs text-slate-400 mb-2">
                             {task.description}
                           </p>
                         )}
@@ -323,6 +385,9 @@ const TaskBoard = () => {
                           <Badge className={`text-xs ${getPriorityColor(task.priority)}`}>
                             {task.priority}
                           </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {getStatusLabel(task.status)}
+                          </Badge>
                           {task.estimated_hours && (
                             <span className="text-xs text-slate-500 flex items-center gap-1">
                               <Clock className="h-3 w-3" />
@@ -330,42 +395,43 @@ const TaskBoard = () => {
                             </span>
                           )}
                         </div>
-                        
-                        <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(task)}
-                            className="h-6 px-2 text-blue-400 hover:text-blue-300"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(task.id)}
-                            className="h-6 px-2 text-red-400 hover:text-red-300"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEdit(task)}
+                          className="h-8 px-2 text-blue-400 hover:text-blue-300"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(task.id)}
+                          className="h-8 px-2 text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                ))}
-                
-                {getTasksByStatus(column.id).length === 0 && (
-                  <div className="text-center py-8 text-slate-500 text-sm">
-                    No hay tareas
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </div>
+              );
+            })}
+            
+            {filteredTasks.length === 0 && (
+              <div className="text-center py-12 text-slate-500">
+                <ListTodo className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No hay tareas {filterStatus !== 'all' ? `en estado "${getStatusLabel(filterStatus)}"` : ''}</p>
+              </div>
+            )}
           </div>
-        ))}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default TaskBoard;
+export default TaskList;
