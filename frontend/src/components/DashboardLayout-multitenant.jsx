@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
-import { Building2, LayoutDashboard, Users, Calendar, LogOut, Menu, X, Shield, Briefcase, Mountain, ListTodo, KanbanSquare } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, Calendar, LogOut, Menu, X, Shield, Briefcase, Mountain, ListTodo, KanbanSquare, DollarSign, Layers, FileText } from 'lucide-react';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -19,9 +19,14 @@ const DashboardLayout = () => {
   const navigation = isSuperAdmin ? [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   ] : isRegularUser ? [
+    { name: 'Dashboard', href: '/dashboard-proyecto', icon: LayoutDashboard },
     { name: 'Mi Proyecto', href: '/proyecto', icon: Briefcase },
+    { name: 'Fases', href: '/fases', icon: Layers },
     { name: 'Tareas', href: '/tareas', icon: ListTodo },
     { name: 'Tablero Kanban', href: '/kanban', icon: KanbanSquare },
+    { name: 'Pagos', href: '/pagos', icon: DollarSign },
+    { name: 'Contrato', href: '/contrato', icon: FileText },
+    { name: 'Actividades', href: '/actividades-proyecto', icon: Calendar },
   ] : [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Clientes', href: '/clientes', icon: Users },
