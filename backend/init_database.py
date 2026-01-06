@@ -184,6 +184,102 @@ async def seed_initial_data():
     await db.projects.insert_one(amaru_project_doc)
     print("✅ Proyecto Amaru Mojica creado: $5,200 (52 entregables)")
     
+    # Create 52 tasks for Amaru's project
+    print("📋 Creando 52 tareas para el proyecto de Amaru...")
+    task_titles = [
+        "Módulo de CRM - Gestión de clientes y contactos",
+        "Sistema de facturación electrónica",
+        "Dashboard ejecutivo con KPIs en tiempo real",
+        "Módulo de inventario y almacén",
+        "Sistema de reportes personalizables",
+        "Integración con APIs de bancos",
+        "Módulo de recursos humanos",
+        "Sistema de nómina",
+        "Control de gastos e ingresos",
+        "Gestión de proyectos internos",
+        "Sistema de tickets/soporte",
+        "Módulo de ventas y cotizaciones",
+        "Gestión de proveedores",
+        "Control de compras",
+        "Sistema de punto de venta (POS)",
+        "Módulo de contabilidad",
+        "Gestión documental",
+        "Sistema de permisos y roles",
+        "Auditoría y logs de sistema",
+        "Módulo de marketing y campañas",
+        "Integración con redes sociales",
+        "Sistema de email marketing",
+        "Gestión de leads y oportunidades",
+        "Pipeline de ventas visual",
+        "Calendario y agenda compartida",
+        "Sistema de tareas y recordatorios",
+        "Módulo de análisis predictivo",
+        "Reportes financieros automatizados",
+        "Dashboard de ventas",
+        "Módulo de servicio al cliente",
+        "Chat interno para equipo",
+        "Sistema de notificaciones push",
+        "Integración con WhatsApp Business",
+        "Módulo de firma electrónica",
+        "Sistema de backup automático",
+        "Gestión de contratos",
+        "Control de vencimientos",
+        "Módulo de cobranza",
+        "Sistema de estados de cuenta",
+        "Integración con pasarelas de pago",
+        "Módulo de logística y envíos",
+        "Tracking de pedidos",
+        "Sistema de devoluciones",
+        "Gestión de garantías",
+        "Módulo de calidad (QA)",
+        "Sistema de encuestas de satisfacción",
+        "Análisis de competencia",
+        "Módulo de business intelligence",
+        "Exportación de datos (Excel, PDF, CSV)",
+        "API REST para integraciones",
+        "Documentación técnica completa",
+        "Capacitación y soporte post-entrega"
+    ]
+    
+    statuses = ["done", "done", "done", "in_progress", "in_progress", "in_progress", "in_progress", "in_progress", 
+                "todo", "todo", "todo", "todo", "todo", "backlog", "backlog", "backlog", "backlog", "backlog",
+                "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog",
+                "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog",
+                "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog",
+                "backlog", "backlog", "backlog", "backlog", "backlog", "backlog", "backlog"]
+    
+    priorities = ["high", "high", "high", "high", "medium", "medium", "medium", "medium", "medium", "medium",
+                  "medium", "medium", "medium", "low", "low", "low", "low", "low", "low", "low",
+                  "low", "low", "low", "low", "low", "low", "low", "low", "low", "low",
+                  "low", "low", "low", "low", "low", "low", "low", "low", "low", "low",
+                  "low", "low", "low", "low", "low", "low", "low", "low", "low", "low", "low", "low"]
+    
+    estimated_hours = [40, 60, 50, 45, 35, 30, 40, 35, 25, 30, 35, 40, 25, 30, 50, 45, 30, 25, 20, 35,
+                       25, 30, 35, 40, 25, 20, 45, 30, 35, 30, 25, 20, 30, 25, 20, 30, 20, 35, 25, 30,
+                       35, 25, 20, 25, 30, 25, 30, 40, 35, 50, 40, 30]
+    
+    for i, title in enumerate(task_titles):
+        task_id = str(uuid.uuid4())
+        task_doc = {
+            "id": task_id,
+            "title": f"{i+1}. {title}",
+            "description": f"Desarrollo e implementación de: {title}",
+            "project_id": amaru_project_id,
+            "assigned_to": amaru_user_id,
+            "status": statuses[i],
+            "priority": priorities[i],
+            "estimated_hours": estimated_hours[i],
+            "actual_hours": estimated_hours[i] if statuses[i] == "done" else (estimated_hours[i] * 0.5 if statuses[i] == "in_progress" else 0),
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=(i * 2))).isoformat(),
+            "tags": ["business-technology", "desarrollo"],
+            "created_by": pactum_admin_id,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.tasks.insert_one(task_doc)
+    
+    print(f"✅ {len(task_titles)} tareas creadas para Amaru Mojica")
+    
     # Create Alma IA user (Partner/Cliente)
     alma_user_id = str(uuid.uuid4())
     alma_user_doc = {

@@ -170,6 +170,29 @@ class ProjectUpdate(BaseModel):
     notes: Optional[str] = None
     progress_percentage: Optional[int] = None
 
+# Task Models
+class TaskCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    project_id: str
+    assigned_to: Optional[str] = None  # user_id
+    status: str = "backlog"  # backlog, todo, in_progress, review, done
+    priority: str = "medium"  # low, medium, high, urgent
+    estimated_hours: Optional[float] = None
+    due_date: Optional[str] = None
+    tags: List[str] = []
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    assigned_to: Optional[str] = None
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    estimated_hours: Optional[float] = None
+    due_date: Optional[str] = None
+    tags: Optional[List[str]] = None
+    actual_hours: Optional[float] = None
+
 # Module Models
 class ModuleAssignment(BaseModel):
     company_id: str
@@ -772,6 +795,137 @@ async def delete_project(project_id: str, user: dict = Depends(require_company_a
     await log_activity("project", project_id, "deleted", user, project.get("company_id"), {"name": project.get("name")})
     
     return {"message": "Proyecto eliminado"}
+
+# ===================== TASKS MANAGEMENT =====================
+
+@api_router.get("/tasks")
+async def get_tasks(project_id: Optional[str] = None, status: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """Get tasks for user's projects"""
+    query = {}
+    
+    # Users can only see tasks from their assigned projects
+    if user["role"] == "USER":
+        user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+        project_ids = [p["id"] for p in user_projects]
+        query["project_id"] = {"$in": project_ids}
+    else:
+        # Company admins see all tasks from their company's projects
+        company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
+        project_ids = [p["id"] for p in company_projects]
+        query["project_id"] = {"$in": project_ids}
+    
+    if project_id:
+        query["project_id"] = project_id
+    
+    if status:
+        query["status"] = status
+    
+    tasks = await db.tasks.find(query, {"_id": 0}).to_list(1000)
+    return tasks
+
+@api_router.post("/tasks")
+async def create_task(data: TaskCreate, user: dict = Depends(get_current_user)):
+    """Create a new task"""
+    # Verify user has access to the project
+    project = await db.projects.find_one({"id": data.project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    task_id = str(uuid.uuid4())
+    task_doc = {
+        "id": task_id,
+        **data.dict(),
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "actual_hours": 0
+    }
+    
+    await db.tasks.insert_one(task_doc)
+    await log_activity("task", task_id, "created", user, user["company_id"], {"title": data.title})
+    
+    return {"id": task_id, "message": "Tarea creada"}
+
+@api_router.put("/tasks/{task_id}")
+async def update_task(task_id: str, data: TaskUpdate, user: dict = Depends(get_current_user)):
+    """Update task"""
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    
+    # Verify access to project
+    project = await db.projects.find_one({"id": task["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    update_data = {k: v for k, v in data.dict(exclude_unset=True).items()}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.tasks.update_one({"id": task_id}, {"$set": update_data})
+    await log_activity("task", task_id, "updated", user, user["company_id"], update_data)
+    
+    return {"message": "Tarea actualizada"}
+
+@api_router.delete("/tasks/{task_id}")
+async def delete_task(task_id: str, user: dict = Depends(get_current_user)):
+    """Delete task"""
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    
+    # Verify access
+    project = await db.projects.find_one({"id": task["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    await db.tasks.delete_one({"id": task_id})
+    await log_activity("task", task_id, "deleted", user, user["company_id"], {"title": task.get("title")})
+    
+    return {"message": "Tarea eliminada"}
+
+@api_router.patch("/tasks/{task_id}/status")
+async def update_task_status(task_id: str, status: str, user: dict = Depends(get_current_user)):
+    """Update task status (for Kanban drag & drop)"""
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    
+    # Verify access
+    project = await db.projects.find_one({"id": task["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    await db.tasks.update_one(
+        {"id": task_id}, 
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    await log_activity("task", task_id, "status_changed", user, user["company_id"], {"status": status})
+    
+    return {"message": "Estado actualizado"}
 
 # ===================== COMPANY - USER MANAGEMENT =====================
 
