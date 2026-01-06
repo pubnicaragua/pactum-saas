@@ -8,6 +8,7 @@ import Login from './pages/Login-multitenant';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import CompanyDashboard from './pages/CompanyDashboard';
 import ProjectView from './pages/ProjectView';
+import TaskBoard from './pages/TaskBoard';
 import ClientsManagement from './pages/ClientsManagement';
 import ActivitiesManagement from './pages/ActivitiesManagement';
 import DashboardLayout from './components/DashboardLayout-multitenant';
@@ -58,6 +59,18 @@ function AppRoutes() {
         <Route path="proyecto" element={
           <ProtectedRoute>
             <ProjectView />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="tareas" element={
+          <ProtectedRoute>
+            <TaskBoard />
+          </ProtectedRoute>
+        } />
+        
+        <Route path="kanban" element={
+          <ProtectedRoute>
+            <TaskBoard />
           </ProtectedRoute>
         } />
         

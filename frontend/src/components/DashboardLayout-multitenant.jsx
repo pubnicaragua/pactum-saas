@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
-import { Building2, LayoutDashboard, Users, Calendar, LogOut, Menu, X, Shield, Briefcase, Mountain } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, Calendar, LogOut, Menu, X, Shield, Briefcase, Mountain, ListTodo, KanbanSquare } from 'lucide-react';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -20,6 +20,8 @@ const DashboardLayout = () => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   ] : isRegularUser ? [
     { name: 'Mi Proyecto', href: '/proyecto', icon: Briefcase },
+    { name: 'Tareas', href: '/tareas', icon: ListTodo },
+    { name: 'Tablero Kanban', href: '/kanban', icon: KanbanSquare },
   ] : [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Clientes', href: '/clientes', icon: Users },

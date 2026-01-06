@@ -123,6 +123,22 @@ export const updateProject = (id, data) =>
 export const deleteProject = (id) => 
   api.delete(`/projects/${id}`);
 
+// Tasks
+export const getTasks = (projectId = null, status = null) => 
+  api.get('/tasks', { params: { project_id: projectId, status } });
+
+export const createTask = (data) => 
+  api.post('/tasks', data);
+
+export const updateTask = (id, data) => 
+  api.put(`/tasks/${id}`, data);
+
+export const deleteTask = (id) => 
+  api.delete(`/tasks/${id}`);
+
+export const updateTaskStatus = (id, status) => 
+  api.patch(`/tasks/${id}/status`, null, { params: { status } });
+
 // Activity Logs
 export const getActivityLogs = (entityType, limit = 100) => 
   api.get('/activity-logs', { params: { entity_type: entityType, limit } });
