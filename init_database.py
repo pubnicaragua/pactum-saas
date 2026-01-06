@@ -1,12 +1,14 @@
 """
 Script para inicializar la base de datos con datos de demostración
+Ejecutar desde la raíz del proyecto o desde Render Shell
 """
 import asyncio
 import sys
 from pathlib import Path
 
-# Agregar el directorio actual al path
-sys.path.insert(0, str(Path(__file__).parent))
+# Agregar el directorio backend al path
+backend_dir = Path(__file__).parent / 'backend'
+sys.path.insert(0, str(backend_dir))
 
 from server_multitenant import db, hash_password
 from datetime import datetime, timezone, timedelta
