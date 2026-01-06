@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getPhases, approvePhase, addPhaseComment, updatePhase } from '../lib/api';
-import { useAuth } from '../lib/auth';
+import { getPhases, updatePhase } from '../lib/api-multitenant';
+import { useAuth } from '../lib/auth-multitenant';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -46,7 +46,7 @@ export default function ProjectPhases() {
 
   const fetchPhases = async () => {
     try {
-      const response = await getPhases('project-crm-amaru');
+      const response = await getPhases();
       setPhases(response.data);
     } catch (error) {
       console.error('Error loading phases:', error);

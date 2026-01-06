@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getPayments, updatePayment, getPhases } from '../lib/api';
-import { useAuth } from '../lib/auth';
+import { getPayments, updatePayment, getPhases } from '../lib/api-multitenant';
+import { useAuth } from '../lib/auth-multitenant';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -43,8 +43,8 @@ export default function ProjectPayments() {
   const fetchData = async () => {
     try {
       const [paymentsRes, phasesRes] = await Promise.all([
-        getPayments('project-crm-amaru'),
-        getPhases('project-crm-amaru')
+        getPayments(),
+        getPhases()
       ]);
       
       // Check for delayed payments (48h rule)

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getProjects, getContracts, uploadContract, analyzeContract } from '../lib/api';
+import { getProjects } from '../lib/api-multitenant';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -37,14 +37,10 @@ export default function ProjectContract() {
 
   const fetchData = async () => {
     try {
-      const [projectsRes, contractsRes] = await Promise.all([
-        getProjects(),
-        getContracts('project-crm-amaru')
-      ]);
+      const projectsRes = await getProjects();
       if (projectsRes.data.length > 0) {
         setProject(projectsRes.data[0]);
       }
-      setContracts(contractsRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Error al cargar datos');
