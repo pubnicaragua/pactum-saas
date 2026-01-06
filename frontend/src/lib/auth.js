@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { login as apiLogin, getMe } from './api';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { login as apiLogin, getMe } from './api-multitenant';
 
 const AuthContext = createContext(null);
 
