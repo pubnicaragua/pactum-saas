@@ -8,6 +8,7 @@ import Login from './pages/Login-multitenant';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import CompanyDashboard from './pages/CompanyDashboard';
 import ProjectView from './pages/ProjectView';
+import ProjectDashboard from './pages/ProjectDashboard';
 import TaskList from './pages/TaskList';
 import TaskBoard from './pages/TaskBoard';
 import ProjectPayments from './pages/ProjectPayments';
@@ -68,7 +69,7 @@ function AppRoutes() {
         
         <Route path="dashboard-proyecto" element={
           <ProtectedRoute>
-            <ProjectView />
+            <ProjectDashboard />
           </ProtectedRoute>
         } />
         

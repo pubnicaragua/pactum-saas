@@ -21,15 +21,15 @@ import {
 } from 'lucide-react';
 
 const statusColors = {
-  'Pendiente': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  'En progreso': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  'Completada': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+  'pendiente': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+  'en_progreso': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  'completado': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
 };
 
 const statusIcons = {
-  'Pendiente': Clock,
-  'En progreso': AlertCircle,
-  'Completada': CheckCircle
+  'pendiente': Clock,
+  'en_progreso': AlertCircle,
+  'completado': CheckCircle
 };
 
 export default function ProjectPhases() {
@@ -56,17 +56,6 @@ export default function ProjectPhases() {
     }
   };
 
-  const handleApprove = async (phaseId) => {
-    try {
-      await approvePhase(phaseId);
-      toast.success('Fase aprobada exitosamente');
-      fetchPhases();
-    } catch (error) {
-      console.error('Error approving phase:', error);
-      toast.error('Error al aprobar la fase');
-    }
-  };
-
   const handleStatusChange = async (phaseId, newStatus) => {
     try {
       await updatePhase(phaseId, { status: newStatus });
@@ -75,23 +64,6 @@ export default function ProjectPhases() {
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Error al actualizar estado');
-    }
-  };
-
-  const handleAddComment = async () => {
-    if (!newComment.trim() || !selectedPhase) return;
-
-    setSubmitting(true);
-    try {
-      await addPhaseComment(selectedPhase.id, newComment);
-      toast.success('Comentario agregado');
-      setNewComment('');
-      fetchPhases();
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      toast.error('Error al agregar comentario');
-    } finally {
-      setSubmitting(false);
     }
   };
 

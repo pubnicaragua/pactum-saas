@@ -23,9 +23,9 @@ import {
 } from 'lucide-react';
 
 const statusColors = {
-  'Programado': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  'Pagado': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-  'Retrasado': 'bg-red-500/20 text-red-400 border-red-500/30'
+  'pendiente': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+  'pagado': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  'vencido': 'bg-red-500/20 text-red-400 border-red-500/30'
 };
 
 export default function ProjectPayments() {
@@ -50,7 +50,7 @@ export default function ProjectPayments() {
       // Check for delayed payments (48h rule)
       const now = new Date();
       const updatedPayments = paymentsRes.data.map(payment => {
-        if (payment.status === 'Programado') {
+        if (payment.status === 'pendiente') {
           const dueDate = new Date(payment.due_date);
           const diffHours = (now - dueDate) / (1000 * 60 * 60);
           if (diffHours > 48) {
@@ -103,9 +103,9 @@ export default function ProjectPayments() {
     });
   };
 
-  const totalPaid = payments.filter(p => p.status === 'Pagado').reduce((sum, p) => sum + p.amount_cordobas, 0);
-  const totalPending = payments.filter(p => p.status !== 'Pagado').reduce((sum, p) => sum + p.amount_cordobas, 0);
-  const delayedCount = payments.filter(p => p.isDelayed || p.status === 'Retrasado').length;
+  const totalPaid = payments.filter(p => p.status === 'pagado').reduce((sum, p) => sum + (p.amount || 0), 0);
+  const totalPending = payments.filter(p => p.status !== 'pagado').reduce((sum, p) => sum + (p.amount || 0), 0);
+  const delayedCount = payments.filter(p => p.isDelayed || p.status === 'vencido').length;
 
   if (loading) {
     return (
@@ -155,7 +155,7 @@ export default function ProjectPayments() {
                 <div>
                   <p className="text-sm text-slate-400">Total Pagado</p>
                   <p className="text-2xl font-bold text-emerald-400 mt-1">
-                    C$ {totalPaid.toLocaleString()}
+                    ${totalPaid.toLocaleString()}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-emerald-600/20">
@@ -177,7 +177,7 @@ export default function ProjectPayments() {
                 <div>
                   <p className="text-sm text-slate-400">Pendiente</p>
                   <p className="text-2xl font-bold text-amber-400 mt-1">
-                    C$ {totalPending.toLocaleString()}
+                    ${totalPending.toLocaleString()}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-amber-600/20">
@@ -199,9 +199,8 @@ export default function ProjectPayments() {
                 <div>
                   <p className="text-sm text-slate-400">Total Proyecto</p>
                   <p className="text-2xl font-bold text-white mt-1">
-                    C$ {(totalPaid + totalPending).toLocaleString()}
+                    ${(totalPaid + totalPending).toLocaleString()}
                   </p>
-                  <p className="text-sm text-slate-500">USD $5,200</p>
                 </div>
                 <div className="p-3 rounded-xl bg-blue-600/20">
                   <DollarSign className="w-6 h-6 text-blue-400" />
@@ -233,8 +232,7 @@ export default function ProjectPayments() {
                     <TableHead className="text-slate-400">Descripción</TableHead>
                     <TableHead className="text-slate-400">Fase</TableHead>
                     <TableHead className="text-slate-400">Fecha</TableHead>
-                    <TableHead className="text-slate-400 text-right">Monto C$</TableHead>
-                    <TableHead className="text-slate-400 text-right">Monto USD</TableHead>
+                    <TableHead className="text-slate-400 text-right">Monto</TableHead>
                     <TableHead className="text-slate-400">Estado</TableHead>
                     <TableHead className="text-slate-400">Acciones</TableHead>
                   </TableRow>
@@ -271,10 +269,7 @@ export default function ProjectPayments() {
                           )}
                         </TableCell>
                         <TableCell className="text-right font-medium text-white">
-                          C$ {payment.amount_cordobas.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right text-slate-400">
-                          ${payment.amount_usd.toLocaleString()}
+                          ${(payment.amount || 0).toLocaleString()}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
