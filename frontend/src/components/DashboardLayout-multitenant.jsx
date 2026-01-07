@@ -31,6 +31,13 @@ const DashboardLayout = () => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Clientes', href: '/clientes', icon: Users },
     { name: 'Actividades', href: '/actividades', icon: Calendar },
+    { name: 'Dashboard Proyecto', href: '/dashboard-proyecto', icon: Mountain },
+    { name: 'Mi Proyecto', href: '/proyecto', icon: Briefcase },
+    { name: 'Fases', href: '/fases', icon: Layers },
+    { name: 'Tareas', href: '/tareas', icon: ListTodo },
+    { name: 'Tablero Kanban', href: '/kanban', icon: KanbanSquare },
+    { name: 'Pagos', href: '/pagos', icon: DollarSign },
+    { name: 'Contrato', href: '/contrato', icon: FileText },
   ];
 
   const isActive = (path) => location.pathname === path;

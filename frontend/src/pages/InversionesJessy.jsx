@@ -59,6 +59,7 @@ const InversionesJessy = () => {
   const totalSalida = 1917.66;
   const totalAbonos = 606.23;
   const saldoPendiente = deudaTotal;
+  const deudaSoftwareNicaragua = 130000; // Deuda directa con Software Nicaragua
 
   const movimientos = [
     { mes: 'JUNIO', salidas: 409.84, abonos: 0, detalles: 'Préstamo para ROPA, ZAPATOS - C$15,000' },
@@ -89,6 +90,9 @@ const InversionesJessy = () => {
     { dia: 'Jueves', monto: 500 },
     { dia: 'Sábado', monto: 500 }
   ];
+  
+  const totalSemanal = 'C$1,500 - C$2,000';
+  const totalQuincenal = 'C$3,500';
 
   const comisionesPendientes = [
     { concepto: 'Alma IA', monto: 500, porcentaje: 5, comision: 25, fecha: '15 Enero' },
@@ -254,10 +258,13 @@ const InversionesJessy = () => {
             </div>
             <div className="mt-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <p className="text-sm text-blue-300">
-                <strong>Total semanal:</strong> C$3,500 (7 pagos de C$500)
+                <strong>Total semanal:</strong> {totalSemanal}
               </p>
-              <p className="text-xs text-slate-400 mt-1">
-                Este esquema es más manejable y te permite cumplir con tus compromisos de forma consistente
+              <p className="text-sm text-blue-300 mt-1">
+                <strong>Total quincenal (2 semanas):</strong> {totalQuincenal}
+              </p>
+              <p className="text-xs text-slate-400 mt-2">
+                Este esquema es más manejable y te permite cumplir con tus compromisos de forma consistente. Los pagos varían entre C$1,500 y C$2,000 por semana, totalizando C$3,500 cada quincena.
               </p>
             </div>
           </CardContent>
@@ -304,7 +311,7 @@ const InversionesJessy = () => {
             <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
               <p className="text-sm text-yellow-300 flex items-center gap-2">
                 <AlertCircle className="h-4 w-4" />
-                <strong>Importante:</strong> Estas comisiones se destinarán a pagar el préstamo de Carlos si no cumples con el abono pendiente de C$10,000 al 15 de Diciembre.
+                <strong>Importante:</strong> Estas comisiones NO han sido liberadas porque estamos pagando el préstamo de C$20,000+ que te comprometiste a regresar el 15 de Diciembre (VENCIDO).
               </p>
               <p className="text-xs text-slate-400 mt-2">
                 Para solicitar el detalle completo de estas comisiones, envía un mensaje formal por WhatsApp.
@@ -321,10 +328,13 @@ const InversionesJessy = () => {
               <div>
                 <h3 className="text-lg font-semibold text-white mb-2">Información Importante</h3>
                 <ul className="space-y-2 text-sm text-slate-300">
-                  <li>• <strong>Deuda Total:</strong> $1,311.43 USD (C$47,683.68)</li>
-                  <li>• <strong>Nuevo esquema:</strong> C$500 cada 2 días desde el 8 de enero</li>
-                  <li>• <strong>Abono pendiente:</strong> C$10,000 al 15 de Diciembre (VENCIDO)</li>
-                  <li>• <strong>Comisiones:</strong> Sujetas a cumplimiento de pagos</li>
+                  <li>• <strong>Deuda con Software Nicaragua:</strong> ~C$130,000 (préstamos desde Junio 2025)</li>
+                  <li>• <strong>Deuda tabla de pagos:</strong> $1,311.43 USD (C$47,683.68)</li>
+                  <li>• <strong>Total abonado:</strong> Más de $600 USD</li>
+                  <li>• <strong>Nuevo esquema:</strong> C$1,500-2,000 semanal / C$3,500 quincenal</li>
+                  <li>• <strong>Préstamo pendiente:</strong> C$20,000+ comprometido al 15 Diciembre (VENCIDO)</li>
+                  <li>• <strong>Paciencia extendida:</strong> Software Nicaragua puede esperar hasta 2 meses para cobrar los C$130,000 SI cumples con el calendario actual</li>
+                  <li>• <strong>Comisiones:</strong> NO liberadas hasta que se pague el préstamo de C$20,000+</li>
                   <li>• <strong>Contacto:</strong> Para consultas, envía mensaje por WhatsApp</li>
                 </ul>
               </div>

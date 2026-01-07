@@ -121,7 +121,7 @@ const ProjectDashboard = () => {
                 <p className="text-xs text-slate-400">Fases Totales</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-400">{project?.estimated_days || 90} días</p>
+                <p className="text-2xl font-bold text-yellow-400">{project?.estimated_days || 30} días</p>
                 <p className="text-xs text-slate-400">Duración Estimada</p>
               </div>
             </div>
@@ -330,7 +330,7 @@ const ProjectDashboard = () => {
               </div>
               <div>
                 <p className="text-xs text-slate-400">Duración</p>
-                <p className="text-sm font-medium text-white">{project.estimated_days || 90} días</p>
+                <p className="text-sm font-medium text-white">{project.estimated_days || 30} días</p>
               </div>
               <div>
                 <p className="text-xs text-slate-400">Valor Total</p>
