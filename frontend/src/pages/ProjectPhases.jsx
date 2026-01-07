@@ -42,6 +42,19 @@ export default function ProjectPhases() {
 
   useEffect(() => {
     fetchPhases();
+    
+    // Listen for project updates
+    const handleProjectUpdate = () => {
+      fetchPhases();
+    };
+    
+    window.addEventListener('projectUpdated', handleProjectUpdate);
+    window.addEventListener('projectChanged', handleProjectUpdate);
+    
+    return () => {
+      window.removeEventListener('projectUpdated', handleProjectUpdate);
+      window.removeEventListener('projectChanged', handleProjectUpdate);
+    };
   }, []);
 
   const fetchPhases = async () => {
@@ -67,43 +80,6 @@ export default function ProjectPhases() {
     }
   };
 
-  const handleApprove = async (phaseId) => {
-    try {
-      await updatePhase(phaseId, { is_approved: true, approved_at: new Date().toISOString() });
-      toast.success('Fase aprobada');
-      fetchPhases();
-    } catch (error) {
-      console.error('Error approving phase:', error);
-      toast.error('Error al aprobar fase');
-    }
-  };
-
-  const handleAddComment = async () => {
-    if (!selectedPhase || !newComment.trim()) {
-      toast.error('Escribe un comentario');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await createPhaseComment(selectedPhase.id, { text: newComment });
-      toast.success('Comentario agregado');
-      setNewComment('');
-      fetchPhases();
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      toast.error('Error al agregar comentario');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Filter phases by current project
-  const projectId = localStorage.getItem('project_id');
-  const filteredPhases = projectId 
-    ? phases.filter(p => p.project_id === projectId)
-    : phases;
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -125,7 +101,7 @@ export default function ProjectPhases() {
       
       {/* Timeline */}
       <div className="relative">
-        {filteredPhases && Array.isArray(filteredPhases) && filteredPhases.map((phase, index) => {
+        {Array.isArray(phases) && phases.map((phase, index) => {
           // Normalizar status y obtener icono de forma segura
           const statusKey = phase.status ? String(phase.status).toLowerCase().trim() : 'pendiente';
           const IconComponent = statusIcons[statusKey] || Clock;

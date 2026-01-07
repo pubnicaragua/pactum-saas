@@ -62,6 +62,9 @@ export default function ProjectSelector() {
         
         toast.success(`Viendo proyecto de: ${client.name}`);
         
+        // Disparar evento personalizado para que otros componentes se actualicen
+        window.dispatchEvent(new CustomEvent('projectChanged', { detail: { projectId: clientProject.id } }));
+        
         // Recargar la página para refrescar los datos
         window.location.reload();
       } else {

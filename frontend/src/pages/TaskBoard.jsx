@@ -38,7 +38,7 @@ const TaskBoard = () => {
   const [taskAttachments, setTaskAttachments] = useState([]);
   const [viewingTask, setViewingTask] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(user?.role === 'TEAM_MEMBER' || user?.role === 'USER');
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(user?.role === 'TEAM_MEMBER');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -51,6 +51,22 @@ const TaskBoard = () => {
 
   useEffect(() => {
     loadTasks();
+    
+    // Listen for project updates
+    const handleProjectUpdate = () => {
+      loadTasks();
+    };
+    
+    window.addEventListener('projectUpdated', handleProjectUpdate);
+    window.addEventListener('projectChanged', handleProjectUpdate);
+    
+    return () => {
+      window.removeEventListener('projectUpdated', handleProjectUpdate);
+      window.removeEventListener('projectChanged', handleProjectUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
     loadUsers();
   }, []);
 
@@ -101,7 +117,7 @@ const TaskBoard = () => {
   const getTasksByStatus = (status) => {
     let filteredTasks = tasks.filter(task => task.status === status);
     
-    if (showOnlyMyTasks && (user?.role === 'TEAM_MEMBER' || user?.role === 'USER')) {
+    if (showOnlyMyTasks && user?.role === 'TEAM_MEMBER') {
       filteredTasks = filteredTasks.filter(task => task.assigned_to === user.id);
     }
     
@@ -277,7 +293,7 @@ const TaskBoard = () => {
         
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {(user?.role === 'TEAM_MEMBER' || user?.role === 'USER') && (
+          {user?.role === 'TEAM_MEMBER' && (
             <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
@@ -514,6 +530,11 @@ const TaskBoard = () => {
                               <Clock className="h-3 w-3" />
                               {task.estimated_hours}h
                             </span>
+                          )}
+                          {task.assigned_to_name && (
+                            <Badge variant="outline" className="text-xs text-blue-300 border-blue-500/30">
+                              👤 {task.assigned_to_name}
+                            </Badge>
                           )}
                         </div>
                         

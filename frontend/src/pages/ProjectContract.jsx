@@ -32,26 +32,28 @@ export default function ProjectContract() {
   const [question, setQuestion] = useState('');
   const [analysisResult, setAnalysisResult] = useState(null);
   const fileInputRef = useRef(null);
-  const { isAdmin, user } = useAuth();
 
   useEffect(() => {
     fetchData();
+    
+    // Listen for project changes
+    const handleProjectChange = () => {
+      fetchData();
+    };
+    
+    window.addEventListener('projectChanged', handleProjectChange);
+    
+    return () => {
+      window.removeEventListener('projectChanged', handleProjectChange);
+    };
   }, []);
 
   const fetchData = async () => {
     try {
       const projectsRes = await getProjects();
-      const projectId = localStorage.getItem('project_id');
-      
-      let selectedProject = null;
-      if (projectId) {
-        selectedProject = projectsRes.data.find(p => p.id === projectId);
+      if (projectsRes.data.length > 0) {
+        setProject(projectsRes.data[0]);
       }
-      if (!selectedProject && projectsRes.data.length > 0) {
-        selectedProject = projectsRes.data[0];
-      }
-      
-      setProject(selectedProject);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Error al cargar datos');

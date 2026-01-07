@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../lib/auth-multitenant';
-import { getProjects, getTasks, getPayments, getPhases } from '../lib/api-multitenant';
+import { getProjects, getTasks, getPayments, getPhases, updateProject } from '../lib/api-multitenant';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
+import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import ProjectSelector from '../components/ProjectSelector';
 import ProjectDocumentation from '../components/ProjectDocumentation';
+import { toast } from 'sonner';
 import { 
   LayoutDashboard, 
   CheckCircle2, 
@@ -14,31 +17,37 @@ import {
   TrendingUp,
   Calendar,
   Target,
-  AlertCircle
+  AlertCircle,
+  Edit,
+  Save,
+  X
 } from 'lucide-react';
 
 const ProjectDashboard = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [payments, setPayments] = useState([]);
   const [phases, setPhases] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [editData, setEditData] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const projectId = localStorage.getItem('project_id');
-    if (projectId) {
-      setSelectedProjectId(projectId);
-    }
     loadData();
-  }, []);
-
-  useEffect(() => {
-    if (selectedProjectId) {
+    
+    // Listen for project changes
+    const handleProjectChange = () => {
       loadData();
-    }
-  }, [selectedProjectId]);
+    };
+    
+    window.addEventListener('projectChanged', handleProjectChange);
+    
+    return () => {
+      window.removeEventListener('projectChanged', handleProjectChange);
+    };
+  }, []);
 
   const loadData = async () => {
     try {
@@ -49,29 +58,18 @@ const ProjectDashboard = () => {
         getPhases()
       ]);
       
-      const projectId = selectedProjectId || localStorage.getItem('project_id');
-      let selectedProject = null;
-      
-      if (projectId) {
-        selectedProject = projectsRes.data.find(p => p.id === projectId);
+      if (projectsRes.data.length > 0) {
+        const proj = projectsRes.data[0];
+        setProject(proj);
+        setEditData({
+          name: proj.name || '',
+          progress_percentage: proj.progress_percentage || 0,
+          estimated_days: proj.estimated_days || 30
+        });
       }
-      if (!selectedProject && projectsRes.data.length > 0) {
-        selectedProject = projectsRes.data[0];
-        setSelectedProjectId(selectedProject.id);
-      }
-      
-      setProject(selectedProject);
-      
-      // Filter data by selected project
-      if (projectId) {
-        setTasks(tasksRes.data.filter(t => t.project_id === projectId));
-        setPayments(paymentsRes.data.filter(p => p.project_id === projectId));
-        setPhases(phasesRes.data.filter(p => p.project_id === projectId));
-      } else {
-        setTasks(tasksRes.data);
-        setPayments(paymentsRes.data);
-        setPhases(phasesRes.data);
-      }
+      setTasks(tasksRes.data);
+      setPayments(paymentsRes.data);
+      setPhases(phasesRes.data);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -109,7 +107,38 @@ const ProjectDashboard = () => {
     pending: phases.filter(p => p.status === 'pendiente').length
   };
 
-  const projectProgress = project?.progress_percentage || 0;
+  const handleSaveProject = async () => {
+    if (!project) return;
+    
+    setSaving(true);
+    try {
+      await updateProject(project.id, editData);
+      toast.success('Proyecto actualizado exitosamente');
+      setEditing(false);
+      await loadData();
+      
+      // Notify other components
+      window.dispatchEvent(new CustomEvent('projectUpdated', { detail: { projectId: project.id } }));
+    } catch (error) {
+      console.error('Error updating project:', error);
+      toast.error('Error al actualizar el proyecto');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditing(false);
+    if (project) {
+      setEditData({
+        name: project.name || '',
+        progress_percentage: project.progress_percentage || 0,
+        estimated_days: project.estimated_days || 30
+      });
+    }
+  };
+
+  const projectProgress = editing ? editData.progress_percentage : (project?.progress_percentage || 0);
 
   return (
     <div className="space-y-6">
@@ -117,25 +146,76 @@ const ProjectDashboard = () => {
       <ProjectSelector />
       
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-white flex items-center gap-2">
-          <LayoutDashboard className="h-8 w-8 text-blue-400" />
-          Dashboard del Proyecto
-        </h1>
-        <p className="text-slate-400 mt-1">Vista general de {project?.name || 'tu proyecto'}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+            <LayoutDashboard className="h-8 w-8 text-blue-400" />
+            Dashboard del Proyecto
+          </h1>
+          <p className="text-slate-400 mt-1">Vista general de {editing ? editData.name : (project?.name || 'tu proyecto')}</p>
+        </div>
+        {user?.role === 'COMPANY_ADMIN' && !editing && (
+          <Button
+            onClick={() => setEditing(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Edit className="h-4 w-4 mr-2" />
+            Editar Proyecto
+          </Button>
+        )}
+        {editing && (
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSaveProject}
+              disabled={saving}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saving ? 'Guardando...' : 'Guardar'}
+            </Button>
+            <Button
+              onClick={handleCancelEdit}
+              variant="outline"
+              className="border-slate-600"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancelar
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Project Overview */}
       <Card className="border-slate-700 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
         <CardHeader>
-          <CardTitle className="text-white">{project?.name || 'Proyecto'}</CardTitle>
+          {editing ? (
+            <Input
+              value={editData.name}
+              onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+              className="text-xl font-bold bg-slate-900 border-slate-700 text-white"
+              placeholder="Nombre del proyecto"
+            />
+          ) : (
+            <CardTitle className="text-white">{project?.name || 'Proyecto'}</CardTitle>
+          )}
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-400">Progreso General</span>
-                <span className="text-sm font-bold text-white">{projectProgress}%</span>
+                {editing ? (
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={editData.progress_percentage}
+                    onChange={(e) => setEditData({ ...editData, progress_percentage: parseInt(e.target.value) || 0 })}
+                    className="w-20 h-8 text-sm bg-slate-900 border-slate-700 text-white text-right"
+                  />
+                ) : (
+                  <span className="text-sm font-bold text-white">{projectProgress}%</span>
+                )}
               </div>
               <Progress value={projectProgress} className="h-2" />
             </div>
@@ -154,7 +234,17 @@ const ProjectDashboard = () => {
                 <p className="text-xs text-slate-400">Fases Totales</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-400">{project?.estimated_days || 30} días</p>
+                {editing ? (
+                  <Input
+                    type="number"
+                    min="1"
+                    value={editData.estimated_days}
+                    onChange={(e) => setEditData({ ...editData, estimated_days: parseInt(e.target.value) || 30 })}
+                    className="w-24 mx-auto text-2xl font-bold bg-slate-900 border-slate-700 text-yellow-400 text-center"
+                  />
+                ) : (
+                  <p className="text-2xl font-bold text-yellow-400">{project?.estimated_days || 30} días</p>
+                )}
                 <p className="text-xs text-slate-400">Duración Estimada</p>
               </div>
             </div>

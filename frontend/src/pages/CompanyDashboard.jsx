@@ -44,40 +44,40 @@ const CompanyDashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="cursor-pointer hover:shadow-lg hover:shadow-slate-700/50 transition-shadow bg-slate-800/50 border-slate-700" onClick={() => navigate('/clientes')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/clientes')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">Total Clientes</CardTitle>
-            <Users className="h-4 w-4 text-blue-400" />
+            <CardTitle className="text-sm font-medium">Total Clientes</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats?.total_clients || 0}</div>
-            <p className="text-xs text-slate-400">
+            <div className="text-2xl font-bold">{stats?.total_clients || 0}</div>
+            <p className="text-xs text-muted-foreground">
               {stats?.active_clients || 0} activos
             </p>
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-lg hover:shadow-slate-700/50 transition-shadow bg-slate-800/50 border-slate-700" onClick={() => navigate('/actividades')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/actividades')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">Actividades Pendientes</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-400" />
+            <CardTitle className="text-sm font-medium">Actividades Pendientes</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats?.pending_activities || 0}</div>
-            <p className="text-xs text-slate-400">
+            <div className="text-2xl font-bold">{stats?.pending_activities || 0}</div>
+            <p className="text-xs text-muted-foreground">
               {stats?.total_activities || 0} total
             </p>
           </CardContent>
         </Card>
 
-        <Card className="bg-slate-800/50 border-slate-700">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">Completadas</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-400" />
+            <CardTitle className="text-sm font-medium">Completadas</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{stats?.completed_activities || 0}</div>
-            <p className="text-xs text-slate-400">
+            <div className="text-2xl font-bold">{stats?.completed_activities || 0}</div>
+            <p className="text-xs text-muted-foreground">
               Este mes
             </p>
           </CardContent>
@@ -107,7 +107,7 @@ const CompanyDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               {stats?.recent_activities?.slice(0, 10).map((activity) => (
-                <div key={activity.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-gray-50">
+                <div key={activity.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-slate-100/5 transition-colors">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h4 className="font-medium">{activity.title}</h4>
@@ -155,7 +155,7 @@ const CompanyDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               {stats?.recent_clients?.slice(0, 10).map((client) => (
-                <div key={client.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-gray-50">
+                <div key={client.id} className="flex items-start justify-between p-3 border rounded-lg hover:bg-slate-100/5 transition-colors">
                   <div className="flex-1">
                     <h4 className="font-medium">{client.name}</h4>
                     {client.company_name && (

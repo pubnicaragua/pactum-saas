@@ -28,6 +28,19 @@ const ProjectView = () => {
 
   useEffect(() => {
     loadProjects();
+    
+    // Listen for project updates
+    const handleProjectUpdate = () => {
+      loadProjects();
+    };
+    
+    window.addEventListener('projectUpdated', handleProjectUpdate);
+    window.addEventListener('projectChanged', handleProjectUpdate);
+    
+    return () => {
+      window.removeEventListener('projectUpdated', handleProjectUpdate);
+      window.removeEventListener('projectChanged', handleProjectUpdate);
+    };
   }, []);
 
   const loadProjects = async () => {

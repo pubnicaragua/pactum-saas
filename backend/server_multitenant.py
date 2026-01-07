@@ -725,7 +725,7 @@ async def get_activities(
     
     query = {"company_id": company_id} if company_id else {}
     
-    # Filter by project if specified
+    # Filter by project_id if provided
     if project_id:
         query["project_id"] = project_id
     
@@ -740,7 +740,7 @@ async def get_activities(
     
     activities = await db.activities.find(query, {"_id": 0}).to_list(1000)
     
-    # Populate client names and assigned user names
+    # Populate client names
     for activity in activities:
         if activity.get("client_id"):
             client = await db.clients.find_one({"id": activity["client_id"]}, {"_id": 0})

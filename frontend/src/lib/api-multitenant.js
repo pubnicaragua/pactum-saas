@@ -159,6 +159,9 @@ export const createPhase = (data) =>
 export const updatePhase = (id, data) => 
   api.put(`/phases/${id}`, data);
 
+export const createPhaseComment = (phaseId, data) => 
+  api.post(`/phases/${phaseId}/comments`, data);
+
 // Activity Logs
 export const getActivityLogs = (entityType, limit = 100) => 
   api.get('/activity-logs', { params: { entity_type: entityType, limit } });

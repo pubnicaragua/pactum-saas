@@ -54,6 +54,22 @@ const TaskList = () => {
 
   useEffect(() => {
     loadTasks();
+    
+    // Listen for project updates
+    const handleProjectUpdate = () => {
+      loadTasks();
+    };
+    
+    window.addEventListener('projectUpdated', handleProjectUpdate);
+    window.addEventListener('projectChanged', handleProjectUpdate);
+    
+    return () => {
+      window.removeEventListener('projectUpdated', handleProjectUpdate);
+      window.removeEventListener('projectChanged', handleProjectUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
     loadUsers();
   }, []);
 
@@ -659,6 +675,11 @@ const TaskList = () => {
                               <Clock className="h-3 w-3" />
                               {task.estimated_hours}h
                             </span>
+                          )}
+                          {task.assigned_to_name && (
+                            <Badge variant="outline" className="text-xs text-blue-300 border-blue-500/30">
+                              👤 {task.assigned_to_name}
+                            </Badge>
                           )}
                         </div>
                       </div>
