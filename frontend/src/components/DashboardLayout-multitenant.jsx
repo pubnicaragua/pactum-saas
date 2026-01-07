@@ -15,9 +15,13 @@ const DashboardLayout = () => {
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const isRegularUser = user?.role === 'USER';
+  const isTeamMember = user?.role === 'TEAM_MEMBER';
 
   const navigation = isSuperAdmin ? [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  ] : isTeamMember ? [
+    { name: 'Tareas', href: '/tareas', icon: ListTodo },
+    { name: 'Tablero Kanban', href: '/kanban', icon: KanbanSquare },
   ] : isRegularUser ? [
     { name: 'Dashboard', href: '/dashboard-proyecto', icon: LayoutDashboard },
     { name: 'Mi Proyecto', href: '/proyecto', icon: Briefcase },

@@ -89,37 +89,37 @@ function AppRoutes() {
         
         <Route path="fases" element={
           <ProtectedRoute>
-            <ProjectPhases />
+            {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ProjectPhases />}
           </ProtectedRoute>
         } />
         
         <Route path="pagos" element={
           <ProtectedRoute>
-            <ProjectPayments />
+            {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ProjectPayments />}
           </ProtectedRoute>
         } />
         
         <Route path="contrato" element={
           <ProtectedRoute>
-            <ProjectContract />
+            {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ProjectContract />}
           </ProtectedRoute>
         } />
         
         <Route path="actividades-proyecto" element={
           <ProtectedRoute>
-            <ActivitiesManagement />
+            {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ActivitiesManagement />}
           </ProtectedRoute>
         } />
         
         <Route path="clientes" element={
           <ProtectedRoute>
-            <ClientsManagement />
+            {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ClientsManagement />}
           </ProtectedRoute>
         } />
         
         <Route path="actividades" element={
           <ProtectedRoute>
-            <ActivitiesManagement />
+            {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ActivitiesManagement />}
           </ProtectedRoute>
         } />
       </Route>
