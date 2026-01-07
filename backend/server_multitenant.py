@@ -417,12 +417,14 @@ async def login(credentials: UserLogin):
             company_name = company.get("name")
     
     token = create_token(user["id"], user["email"], user["role"], user.get("company_id"))
+    # Soportar tanto 'name' como 'full_name' para compatibilidad
+    user_name = user.get("name") or user.get("full_name") or user["email"]
     return TokenResponse(
         access_token=token,
         user=UserResponse(
             id=user["id"],
             email=user["email"],
-            name=user["name"],
+            name=user_name,
             role=user["role"],
             company_id=user.get("company_id"),
             company_name=company_name
@@ -437,10 +439,12 @@ async def get_me(user: dict = Depends(get_current_user)):
         if company:
             company_name = company.get("name")
     
+    # Soportar tanto 'name' como 'full_name' para compatibilidad
+    user_name = user.get("name") or user.get("full_name") or user["email"]
     return UserResponse(
         id=user["id"],
         email=user["email"],
-        name=user["name"],
+        name=user_name,
         role=user["role"],
         company_id=user.get("company_id"),
         company_name=company_name
