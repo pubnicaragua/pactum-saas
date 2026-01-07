@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
+import { Dialog, DialogContent } from './ui/dialog';
 import { toast } from 'sonner';
-import { Mic, MicOff, Image, Trash2, Play, Pause, Download } from 'lucide-react';
+import { Mic, MicOff, Image, Trash2, Play, Pause, Download, X } from 'lucide-react';
 
 const TaskAttachments = ({ taskId, attachments = [], onAttachmentAdded, requireImages = false }) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -10,6 +11,7 @@ const TaskAttachments = ({ taskId, attachments = [], onAttachmentAdded, requireI
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [playingAudio, setPlayingAudio] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [viewingImage, setViewingImage] = useState(null);
   const fileInputRef = useRef(null);
   const audioRef = useRef(null);
 
@@ -258,7 +260,7 @@ const TaskAttachments = ({ taskId, attachments = [], onAttachmentAdded, requireI
                     type="button"
                     size="sm"
                     variant="ghost"
-                    onClick={() => window.open(image.file_url, '_blank')}
+                    onClick={() => setViewingImage(image)}
                     className="text-white"
                   >
                     Ver
@@ -279,6 +281,36 @@ const TaskAttachments = ({ taskId, attachments = [], onAttachmentAdded, requireI
           </div>
         )}
       </div>
+
+      {/* Modal de Vista de Imagen */}
+      <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
+        <DialogContent className="bg-slate-900 border-slate-700 max-w-4xl p-0">
+          <div className="relative">
+            <Button
+              onClick={() => setViewingImage(null)}
+              className="absolute top-2 right-2 z-10 bg-black/50 hover:bg-black/70"
+              size="sm"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            {viewingImage && (
+              <img
+                src={viewingImage.file_url}
+                alt={viewingImage.filename}
+                className="w-full h-auto max-h-[80vh] object-contain"
+              />
+            )}
+            {viewingImage && (
+              <div className="p-4 bg-slate-800 border-t border-slate-700">
+                <p className="text-sm text-slate-300">{viewingImage.filename}</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Subido el {new Date(viewingImage.uploaded_at).toLocaleString()}
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

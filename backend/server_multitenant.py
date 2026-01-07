@@ -1137,6 +1137,51 @@ async def reassign_task(task_id: str, data: TaskReassign, user: dict = Depends(g
         "reason": data.reason
     }
 
+@api_router.get("/tasks/reassignments/history")
+async def get_reassignment_history(user: dict = Depends(get_current_user)):
+    """Get all task reassignments history for the company"""
+    # Get all tasks with reassignment history from user's company
+    company_projects = await db.projects.find(
+        {"company_id": user["company_id"]}, 
+        {"_id": 0, "id": 1}
+    ).to_list(100)
+    project_ids = [p["id"] for p in company_projects]
+    
+    tasks = await db.tasks.find(
+        {
+            "project_id": {"$in": project_ids},
+            "reassignment_history": {"$exists": True, "$ne": []}
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Flatten reassignment history with task info
+    reassignments = []
+    for task in tasks:
+        for reassignment in task.get("reassignment_history", []):
+            # Get user names
+            from_user = await db.users.find_one({"id": reassignment.get("from_user_id")})
+            to_user = await db.users.find_one({"id": reassignment.get("to_user_id")})
+            reassigned_by_user = await db.users.find_one({"id": reassignment.get("reassigned_by")})
+            
+            reassignments.append({
+                "task_id": task["id"],
+                "task_title": task["title"],
+                "from_user_id": reassignment.get("from_user_id"),
+                "from_user_name": from_user.get("name") if from_user else "Usuario eliminado",
+                "to_user_id": reassignment.get("to_user_id"),
+                "to_user_name": to_user.get("name") if to_user else "Usuario eliminado",
+                "reassigned_by_id": reassignment.get("reassigned_by"),
+                "reassigned_by_name": reassigned_by_user.get("name") if reassigned_by_user else "Usuario eliminado",
+                "reason": reassignment.get("reason"),
+                "reassigned_at": reassignment.get("reassigned_at")
+            })
+    
+    # Sort by date descending
+    reassignments.sort(key=lambda x: x["reassigned_at"], reverse=True)
+    
+    return reassignments
+
 @api_router.patch("/tasks/{task_id}/status")
 async def update_task_status(task_id: str, status: str, user: dict = Depends(get_current_user)):
     """Update task status (for Kanban drag & drop)"""
