@@ -184,6 +184,7 @@ class TaskCreate(BaseModel):
     estimated_hours: Optional[float] = None
     due_date: Optional[str] = None
     tags: List[str] = []
+    technical_notes: Optional[str] = None  # Endpoints, APIs, notas técnicas
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
@@ -195,6 +196,11 @@ class TaskUpdate(BaseModel):
     due_date: Optional[str] = None
     tags: Optional[List[str]] = None
     actual_hours: Optional[float] = None
+    technical_notes: Optional[str] = None  # Endpoints, APIs, notas técnicas
+
+class TaskReassign(BaseModel):
+    new_assigned_to: str  # user_id del nuevo asignado
+    reason: str  # Motivo de la reasignación
 
 # Payment Models
 class PaymentCreate(BaseModel):
@@ -971,6 +977,64 @@ async def delete_task(task_id: str, user: dict = Depends(get_current_user)):
     await log_activity("task", task_id, "deleted", user, user["company_id"], {"title": task.get("title")})
     
     return {"message": "Tarea eliminada"}
+
+@api_router.post("/tasks/{task_id}/reassign")
+async def reassign_task(task_id: str, data: TaskReassign, user: dict = Depends(get_current_user)):
+    """Reassign task to another user with reason"""
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    
+    # Verify access to project
+    project = await db.projects.find_one({"id": task["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Verify new user exists and has access to project
+    new_user = await db.users.find_one({"id": data.new_assigned_to})
+    if not new_user:
+        raise HTTPException(status_code=404, detail="Usuario destino no encontrado")
+    
+    # Verify new user has access to the project
+    if new_user["role"] == "TEAM_MEMBER":
+        if data.new_assigned_to not in project.get("assigned_users", []):
+            raise HTTPException(status_code=400, detail="Usuario destino no tiene acceso a este proyecto")
+    
+    # Create reassignment history entry
+    reassignment_entry = {
+        "from_user_id": task.get("assigned_to"),
+        "to_user_id": data.new_assigned_to,
+        "reason": data.reason,
+        "reassigned_by": user["id"],
+        "reassigned_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Update task
+    update_data = {
+        "assigned_to": data.new_assigned_to,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Add to reassignment history
+    await db.tasks.update_one(
+        {"id": task_id},
+        {
+            "$set": update_data,
+            "$push": {"reassignment_history": reassignment_entry}
+        }
+    )
+    
+    await log_activity("task", task_id, "reassigned", user, user["company_id"], {
+        "from": task.get("assigned_to"),
+        "to": data.new_assigned_to,
+        "reason": data.reason
+    })
+    
+    return {
+        "message": "Tarea reasignada exitosamente",
+        "new_assigned_to": data.new_assigned_to,
+        "reason": data.reason
+    }
 
 @api_router.patch("/tasks/{task_id}/status")
 async def update_task_status(task_id: str, status: str, user: dict = Depends(get_current_user)):
