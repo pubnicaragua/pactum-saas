@@ -35,32 +35,47 @@ async def seed_alma_ia_backlog():
     print("="*60 + "\n")
     
     # Buscar empresa Pactum (Software Nicaragua)
+    print("🔍 Buscando empresa 'Software Nicaragua'...")
     pactum_company = await db.companies.find_one({"name": "Software Nicaragua"})
     if not pactum_company:
         print("❌ Error: No se encontró la empresa Software Nicaragua")
+        print("   Ejecuta primero: python backend/init_database.py")
         return
     
     pactum_company_id = pactum_company["id"]
+    print(f"✅ Empresa encontrada: {pactum_company['name']} (ID: {pactum_company_id})")
     
     # Buscar cliente Alma IA
+    print("🔍 Buscando cliente 'Alma IA'...")
     alma_client = await db.clients.find_one({"name": "Alma IA"})
     if not alma_client:
         print("❌ Error: No se encontró el cliente Alma IA")
+        print("   Ejecuta primero: python backend/init_database.py")
+        # Mostrar clientes existentes
+        all_clients = await db.clients.find({"company_id": pactum_company_id}).to_list(length=100)
+        print(f"   Clientes existentes: {[c['name'] for c in all_clients]}")
         return
     
     alma_client_id = alma_client["id"]
+    print(f"✅ Cliente encontrado: {alma_client['name']} (ID: {alma_client_id})")
     
     # Buscar proyecto de Alma IA
+    print("🔍 Buscando proyecto de Alma IA...")
     alma_project = await db.projects.find_one({"client_id": alma_client_id})
     if not alma_project:
         print("❌ Error: No se encontró el proyecto de Alma IA")
+        print("   Ejecuta primero: python backend/init_database.py")
+        # Mostrar proyectos existentes
+        all_projects = await db.projects.find({}).to_list(length=100)
+        print(f"   Total proyectos en BD: {len(all_projects)}")
+        if all_projects:
+            print(f"   Proyectos existentes:")
+            for p in all_projects[:5]:
+                print(f"     - {p.get('name', 'Sin nombre')} (client_id: {p.get('client_id', 'N/A')})")
         return
     
     alma_project_id = alma_project["id"]
-    
-    print(f"✅ Empresa encontrada: {pactum_company['name']}")
-    print(f"✅ Cliente encontrado: {alma_client['name']}")
-    print(f"✅ Proyecto encontrado: {alma_project['name']}\n")
+    print(f"✅ Proyecto encontrado: {alma_project['name']} (ID: {alma_project_id})\n")
     
     # ============================================================
     # CREAR USUARIOS DEL EQUIPO ALMA IA
