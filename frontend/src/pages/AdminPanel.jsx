@@ -65,8 +65,10 @@ const AdminPanel = () => {
       } else if (activeTab === 'projects') {
         await loadProjects();
         await loadClients(); // Needed for project form
+        await loadUsers(); // Needed for assigning users to projects
       } else if (activeTab === 'users') {
         await loadUsers();
+        await loadProjects(); // Needed to show user's assigned projects
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -444,8 +446,23 @@ const AdminPanel = () => {
                     </div>
                     {project.assigned_users && project.assigned_users.length > 0 && (
                       <div>
-                        <Badge variant="secondary" className="text-xs">
-                          {project.assigned_users.length} usuario(s) asignado(s)
+                        <p className="text-xs text-slate-500 mb-1">Usuarios asignados:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {project.assigned_users.map(userId => {
+                            const user = users.find(u => u.id === userId);
+                            return user ? (
+                              <Badge key={userId} variant="secondary" className="text-xs">
+                                {user.name}
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {(!project.assigned_users || project.assigned_users.length === 0) && (
+                      <div>
+                        <Badge variant="outline" className="text-xs text-orange-400 border-orange-400">
+                          ⚠️ Sin usuarios asignados
                         </Badge>
                       </div>
                     )}
@@ -522,6 +539,25 @@ const AdminPanel = () => {
                     }>
                       {user.role === 'COMPANY_ADMIN' ? 'Admin' : user.role === 'TEAM_MEMBER' ? 'Miembro' : 'Usuario'}
                     </Badge>
+                    
+                    {(user.role === 'TEAM_MEMBER' || user.role === 'USER') && (
+                      <div className="mt-3">
+                        <p className="text-xs text-slate-500 mb-1">Proyectos asignados:</p>
+                        {projects.filter(p => p.assigned_users && p.assigned_users.includes(user.id)).length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {projects.filter(p => p.assigned_users && p.assigned_users.includes(user.id)).map(project => (
+                              <Badge key={project.id} variant="outline" className="text-xs">
+                                {project.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-xs text-orange-400 border-orange-400">
+                            ⚠️ Sin proyectos asignados
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -662,6 +698,43 @@ const AdminPanel = () => {
                 />
               </div>
             </div>
+            
+            <div>
+              <Label>Usuarios Asignados al Proyecto *</Label>
+              <p className="text-xs text-slate-500 mb-2">Selecciona los miembros del equipo que tendrán acceso a este proyecto</p>
+              <div className="bg-slate-900 border border-slate-700 rounded-md p-3 max-h-48 overflow-y-auto">
+                {users.filter(u => u.role === 'TEAM_MEMBER' || u.role === 'USER').map(user => (
+                  <label key={user.id} className="flex items-center gap-2 py-2 cursor-pointer hover:bg-slate-800 px-2 rounded">
+                    <input
+                      type="checkbox"
+                      checked={projectForm.assigned_users.includes(user.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setProjectForm({
+                            ...projectForm,
+                            assigned_users: [...projectForm.assigned_users, user.id]
+                          });
+                        } else {
+                          setProjectForm({
+                            ...projectForm,
+                            assigned_users: projectForm.assigned_users.filter(id => id !== user.id)
+                          });
+                        }
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-white">{user.name}</span>
+                    <Badge className="ml-auto text-xs">
+                      {user.role === 'TEAM_MEMBER' ? 'Miembro' : 'Usuario'}
+                    </Badge>
+                  </label>
+                ))}
+                {users.filter(u => u.role === 'TEAM_MEMBER' || u.role === 'USER').length === 0 && (
+                  <p className="text-slate-500 text-sm">No hay usuarios disponibles. Crea usuarios primero.</p>
+                )}
+              </div>
+            </div>
+            
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setProjectDialogOpen(false)}>
                 Cancelar
