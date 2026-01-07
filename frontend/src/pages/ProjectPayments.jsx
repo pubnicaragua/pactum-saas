@@ -21,6 +21,7 @@ import {
   Edit,
   FileText
 } from 'lucide-react';
+import ProjectSelector from '../components/ProjectSelector';
 
 const statusColors = {
   'pendiente': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -116,10 +117,12 @@ export default function ProjectPayments() {
   }
 
   return (
-    <div className="space-y-8" data-testid="project-payments">
-      {/* Header */}
+    <div className="space-y-6" data-testid="project-payments">
+      {/* Project Selector for COMPANY_ADMIN */}
+      <ProjectSelector />
+      
       <div>
-        <h1 className="text-3xl font-bold text-white">Pagos Programados</h1>
+        <h1 className="text-3xl font-bold text-white">Pagos del Proyecto</h1>
         <p className="text-slate-400 mt-1">Control de pagos por hito del proyecto</p>
       </div>
 

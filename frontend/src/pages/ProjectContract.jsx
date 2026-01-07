@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../lib/auth-multitenant';
 import { getProjects } from '../lib/api-multitenant';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
+import ProjectSelector from '../components/ProjectSelector';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { 
@@ -117,16 +119,13 @@ export default function ProjectContract() {
   ];
 
   return (
-    <div className="space-y-8" data-testid="project-contract">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Contrato del Proyecto</h1>
-          <p className="text-slate-400 mt-1">{project?.name}</p>
-        </div>
-        <input
-          type="file"
-          ref={fileInputRef}
+    <div className="space-y-6">
+      {/* Project Selector for COMPANY_ADMIN */}
+      <ProjectSelector />
+      
+      <div>
+        <h1 className="text-3xl font-bold text-white">Contrato del Proyecto</h1>
+        <p className="text-slate-400 mt-1">{project?.name}</p>
           onChange={handleFileUpload}
           accept=".pdf"
           className="hidden"

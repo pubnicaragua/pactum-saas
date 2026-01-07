@@ -17,6 +17,7 @@ import ProjectContract from './pages/ProjectContract';
 import ClientsManagement from './pages/ClientsManagement';
 import ActivitiesManagement from './pages/ActivitiesManagement';
 import InversionesJessy from './pages/InversionesJessy';
+import ContractsPactum from './pages/ContractsPactum';
 import DashboardLayout from './components/DashboardLayout-multitenant';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -123,8 +124,9 @@ function AppRoutes() {
         } />
       </Route>
       
-      {/* Public route for Inversiones Jessy */}
+      {/* Public routes */}
       <Route path="/inversiones-jessy" element={<InversionesJessy />} />
+      <Route path="/contracts-pactum" element={<ContractsPactum />} />
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

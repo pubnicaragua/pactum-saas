@@ -20,6 +20,7 @@ import {
   Edit,
   GripVertical
 } from 'lucide-react';
+import ProjectSelector from '../components/ProjectSelector';
 
 const TaskBoard = () => {
   const { user } = useAuth();
@@ -171,11 +172,16 @@ const TaskBoard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Project Selector for COMPANY_ADMIN */}
+      <ProjectSelector />
+      
+      <div>
+        <h1 className="text-3xl font-bold text-white">Tablero Kanban</h1>
+        <p className="text-slate-400 mt-1">Gestión visual de tareas</p>
+      </div>
+        
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Tablero de Tareas</h1>
-          <p className="text-slate-400 mt-1">Gestiona tus tareas con vista Kanban</p>
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

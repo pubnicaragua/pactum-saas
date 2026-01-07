@@ -4,6 +4,7 @@ import { getProjects, getTasks, getPayments, getPhases } from '../lib/api-multit
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
+import ProjectSelector from '../components/ProjectSelector';
 import { 
   LayoutDashboard, 
   CheckCircle2, 
@@ -83,6 +84,9 @@ const ProjectDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Project Selector for COMPANY_ADMIN */}
+      <ProjectSelector />
+      
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-white flex items-center gap-2">

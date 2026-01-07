@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../lib/auth-multitenant';
 import { getProjects } from '../lib/api-multitenant';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import ProjectSelector from '../components/ProjectSelector';
 import { toast } from 'sonner';
 import { 
   Briefcase, 
@@ -82,13 +83,13 @@ const ProjectView = () => {
   };
 
   return (
-    <div className="space-y-6 text-white">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Mi Proyecto</h1>
-          <p className="text-slate-400 mt-1">Detalles y progreso del proyecto asignado</p>
-        </div>
+    <div className="space-y-6">
+      {/* Project Selector for COMPANY_ADMIN */}
+      <ProjectSelector />
+      
+      <div>
+        <h1 className="text-3xl font-bold text-white">Mi Proyecto</h1>
+        <p className="text-slate-400 mt-1">Detalles del proyecto CRM Multi-Empresa</p>
       </div>
 
       {/* Project Overview Card */}

@@ -396,15 +396,15 @@ async def seed_initial_data():
     }
     await db.clients.insert_one(alma_client_doc)
     
-    # Cliente 3: Empresa Demo
-    demo_client_id = str(uuid.uuid4())
-    demo_client_doc = {
-        "id": demo_client_id,
+    # Cliente 3: CodeXpert
+    codexpert_client_id = str(uuid.uuid4())
+    codexpert_client_doc = {
+        "id": codexpert_client_id,
         "company_id": pactum_company_id,
-        "name": "Empresa Demo S.A.",
-        "email": "contacto@empresademo.com",
+        "name": "CodeXpert",
+        "email": "contacto@codexpert.com",
         "phone": "+505 6666-6666",
-        "company_name": "Empresa Demo S.A.",
+        "company_name": "CodeXpert - Soluciones Tecnológicas",
         "address": "Carretera Norte, Managua",
         "city": "Managua",
         "country": "Nicaragua",
@@ -414,7 +414,7 @@ async def seed_initial_data():
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.clients.insert_one(demo_client_doc)
+    await db.clients.insert_one(codexpert_client_doc)
     
     # Cliente 4: Solvendo
     solvendo_client_id = str(uuid.uuid4())
@@ -476,7 +476,7 @@ async def seed_initial_data():
     }
     await db.clients.insert_one(jessy_client_doc)
     
-    print("✅ 6 clientes creados para Software Nicaragua (Amaru, Alma IA, Demo, Solvendo, Investi, Jessy)")
+    print("✅ 6 clientes creados para Software Nicaragua (Amaru, Alma IA, CodeXpert, Solvendo, Investi, Jessy)")
     
     # Create Alma IA user (Partner/Cliente)
     alma_user_id = str(uuid.uuid4())

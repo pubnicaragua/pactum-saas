@@ -9,6 +9,7 @@ import { Textarea } from '../components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Badge } from '../components/ui/badge';
+import ProjectSelector from '../components/ProjectSelector';
 import { toast } from 'sonner';
 import { 
   ListTodo, 
@@ -255,11 +256,13 @@ const TaskList = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Project Selector for COMPANY_ADMIN */}
+      <ProjectSelector />
+      
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-white">Lista de Tareas</h1>
-          <p className="text-slate-400 mt-1">Gestiona todas tus tareas en formato lista</p>
+          <h1 className="text-3xl font-bold text-white">Tareas del Proyecto</h1>
+          <p className="text-slate-400 mt-1">Gestiona las tareas y actividades</p>
         </div>
         
         <div className="flex items-center gap-2">

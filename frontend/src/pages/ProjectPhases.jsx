@@ -86,7 +86,8 @@ export default function ProjectPhases() {
       {/* Timeline */}
       <div className="relative">
         {phases.map((phase, index) => {
-          const StatusIcon = statusIcons[phase.status] || Clock;
+          const statusKey = phase.status?.toLowerCase() || 'pendiente';
+          const StatusIcon = statusIcons[statusKey] || Clock;
           return (
             <motion.div
               key={phase.id}
