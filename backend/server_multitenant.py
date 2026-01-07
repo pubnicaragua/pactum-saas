@@ -1290,6 +1290,111 @@ async def delete_task_comment(task_id: str, comment_id: str, user: dict = Depend
     
     return {"message": "Comentario eliminado"}
 
+# ===================== PROJECT DOCUMENTATION =====================
+
+@api_router.get("/projects/{project_id}/documents")
+async def get_project_documents(project_id: str, user: dict = Depends(get_current_user)):
+    """Get all documents for a project"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Verify access
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif user["role"] == "TEAM_MEMBER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    documents = await db.project_documents.find(
+        {"project_id": project_id},
+        {"_id": 0}
+    ).sort("uploaded_at", -1).to_list(1000)
+    
+    return documents
+
+@api_router.post("/projects/{project_id}/documents")
+async def upload_project_document(
+    project_id: str,
+    file: UploadFile = File(...),
+    name: str = Form(...),
+    document_type: str = Form("other"),
+    user: dict = Depends(get_current_user)
+):
+    """Upload a PDF document to a project"""
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Verify access (only admins and team members can upload)
+    if user["role"] == "USER":
+        raise HTTPException(status_code=403, detail="No tienes permiso para subir documentos")
+    elif user["role"] == "TEAM_MEMBER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    # Validate file type
+    if file.content_type != "application/pdf":
+        raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
+    
+    # Read and validate file size
+    file_content = await file.read()
+    file_size = len(file_content)
+    
+    if file_size > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Archivo muy grande (máximo 10MB)")
+    
+    # Convert to base64
+    file_base64 = base64.b64encode(file_content).decode('utf-8')
+    file_url = f"data:application/pdf;base64,{file_base64}"
+    
+    # Create document record
+    document = {
+        "id": str(uuid.uuid4()),
+        "project_id": project_id,
+        "name": name,
+        "document_type": document_type,
+        "file_url": file_url,
+        "size_bytes": file_size,
+        "uploaded_by": user["id"],
+        "uploaded_by_name": user.get("name", user.get("email")),
+        "uploaded_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.project_documents.insert_one(document)
+    
+    await log_activity("project", project_id, "document_uploaded", user, user["company_id"], {
+        "document_name": name,
+        "document_type": document_type,
+        "size_bytes": file_size
+    })
+    
+    return {"message": "Documento subido exitosamente", "document": document}
+
+@api_router.delete("/projects/{project_id}/documents/{document_id}")
+async def delete_project_document(project_id: str, document_id: str, user: dict = Depends(get_current_user)):
+    """Delete a project document"""
+    document = await db.project_documents.find_one({"id": document_id, "project_id": project_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    
+    # Only uploader or admin can delete
+    if document["uploaded_by"] != user["id"] and user["role"] not in ["COMPANY_ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este documento")
+    
+    await db.project_documents.delete_one({"id": document_id})
+    
+    await log_activity("project", project_id, "document_deleted", user, user["company_id"], {
+        "document_name": document["name"]
+    })
+    
+    return {"message": "Documento eliminado"}
+
 @api_router.get("/tasks/reassignments/history")
 async def get_reassignment_history(user: dict = Depends(get_current_user)):
     """Get all task reassignments history for the company"""

@@ -21,6 +21,7 @@ import ContractsPactum from './pages/ContractsPactum';
 import FinancialDashboard from './pages/FinancialDashboard';
 import ReassignmentHistory from './pages/ReassignmentHistory';
 import AdminPanel from './pages/AdminPanel';
+import TeamMemberDashboard from './pages/TeamMemberDashboard';
 import DashboardLayout from './components/DashboardLayout-multitenant';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -64,7 +65,7 @@ function AppRoutes() {
             : user?.role === 'USER' 
               ? <ProjectView />
               : user?.role === 'TEAM_MEMBER'
-                ? <Navigate to="/tareas" replace />
+                ? <TeamMemberDashboard />
                 : <CompanyDashboard />
         } />
         

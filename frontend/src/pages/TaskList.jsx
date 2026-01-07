@@ -41,6 +41,7 @@ const TaskList = () => {
   const [taskAttachments, setTaskAttachments] = useState([]);
   const [viewingTask, setViewingTask] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(user?.role === 'TEAM_MEMBER');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -317,9 +318,13 @@ const TaskList = () => {
     }
   };
 
-  const filteredTasks = filterStatus === 'all' 
+  let filteredTasks = filterStatus === 'all' 
     ? tasks 
     : tasks.filter(t => t.status === filterStatus);
+  
+  if (showOnlyMyTasks && user?.role === 'TEAM_MEMBER') {
+    filteredTasks = filteredTasks.filter(task => task.assigned_to === user.id);
+  }
 
   const taskStats = {
     total: tasks.length,
@@ -346,6 +351,17 @@ const TaskList = () => {
         <div>
           <h1 className="text-3xl font-bold text-white">Tareas del Proyecto</h1>
           <p className="text-slate-400 mt-1">Gestiona las tareas y actividades</p>
+          {user?.role === 'TEAM_MEMBER' && (
+            <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer mt-2">
+              <input
+                type="checkbox"
+                checked={showOnlyMyTasks}
+                onChange={(e) => setShowOnlyMyTasks(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500"
+              />
+              <span>Mostrar solo mis tareas</span>
+            </label>
+          )}
         </div>
         
         <div className="flex items-center gap-2">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import ProjectSelector from '../components/ProjectSelector';
+import ProjectDocumentation from '../components/ProjectDocumentation';
 import { 
   LayoutDashboard, 
   CheckCircle2, 
@@ -346,6 +347,9 @@ const ProjectDashboard = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Project Documentation */}
+      {project && <ProjectDocumentation projectId={project.id} />}
     </div>
   );
 };

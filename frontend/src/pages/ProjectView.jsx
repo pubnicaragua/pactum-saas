@@ -4,6 +4,7 @@ import { getProjects } from '../lib/api-multitenant';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import ProjectSelector from '../components/ProjectSelector';
+import ProjectDocumentation from '../components/ProjectDocumentation';
 import { toast } from 'sonner';
 import { 
   Briefcase, 
@@ -448,6 +449,9 @@ const ProjectView = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Project Documentation */}
+      <ProjectDocumentation projectId={project.id} />
     </div>
   );
 };

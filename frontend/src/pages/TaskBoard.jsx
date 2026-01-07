@@ -38,6 +38,7 @@ const TaskBoard = () => {
   const [taskAttachments, setTaskAttachments] = useState([]);
   const [viewingTask, setViewingTask] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(user?.role === 'TEAM_MEMBER');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -98,7 +99,13 @@ const TaskBoard = () => {
   ];
 
   const getTasksByStatus = (status) => {
-    return tasks.filter(task => task.status === status);
+    let filteredTasks = tasks.filter(task => task.status === status);
+    
+    if (showOnlyMyTasks && user?.role === 'TEAM_MEMBER') {
+      filteredTasks = filteredTasks.filter(task => task.assigned_to === user.id);
+    }
+    
+    return filteredTasks;
   };
 
   const getPriorityColor = (priority) => {
@@ -269,7 +276,18 @@ const TaskBoard = () => {
       </div>
         
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-4">
+          {user?.role === 'TEAM_MEMBER' && (
+            <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showOnlyMyTasks}
+                onChange={(e) => setShowOnlyMyTasks(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-blue-600 focus:ring-blue-500"
+              />
+              <span>Mostrar solo mis tareas</span>
+            </label>
+          )}
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -452,14 +470,27 @@ const TaskBoard = () => {
                       setTaskAttachments(task.attachments || []);
                       setViewDialogOpen(true);
                     }}
-                    className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 cursor-pointer hover:border-blue-500 transition-colors group"
+                    className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 cursor-pointer hover:border-blue-500 transition-colors group shadow-md hover:shadow-lg"
+                    style={{
+                      boxShadow: task.priority === 'urgent' ? '0 4px 6px -1px rgba(239, 68, 68, 0.3), 0 2px 4px -1px rgba(239, 68, 68, 0.2)' :
+                                 task.priority === 'high' ? '0 4px 6px -1px rgba(249, 115, 22, 0.3), 0 2px 4px -1px rgba(249, 115, 22, 0.2)' :
+                                 task.priority === 'medium' ? '0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2)' :
+                                 '0 4px 6px -1px rgba(71, 85, 105, 0.3), 0 2px 4px -1px rgba(71, 85, 105, 0.2)'
+                    }}
                   >
                     <div className="flex items-start gap-2">
                       <GripVertical className="h-4 w-4 text-slate-600 mt-1 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-white mb-1 line-clamp-2">
-                          {task.title}
-                        </h4>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-sm font-medium text-white line-clamp-2 flex-1">
+                            {task.title}
+                          </h4>
+                          {task.priority === 'urgent' && (
+                            <Badge className="bg-red-500/20 text-red-300 border-red-500/30 text-xs px-1 py-0">
+                              🔥
+                            </Badge>
+                          )}
+                        </div>
                         {task.description && (
                           <p className="text-xs text-slate-400 mb-2 line-clamp-2">
                             {task.description}
