@@ -1,14 +1,12 @@
 """
 Script para inicializar la base de datos con datos de demostración
-Ejecutar desde la raíz del proyecto o desde Render Shell
 """
 import asyncio
 import sys
 from pathlib import Path
 
-# Agregar el directorio backend al path
-backend_dir = Path(__file__).parent / 'backend'
-sys.path.insert(0, str(backend_dir))
+# Agregar el directorio actual al path
+sys.path.insert(0, str(Path(__file__).parent))
 
 from server_multitenant import db, hash_password
 from datetime import datetime, timezone, timedelta
@@ -354,6 +352,71 @@ async def seed_initial_data():
         await db.payments.insert_one(payment_doc)
     
     print(f"✅ {len(payments_data)} pagos creados (1 pagado, 3 pendientes)")
+    
+    # Create clients for Pactum (Software Nicaragua)
+    print("📝 Creando clientes para Software Nicaragua...")
+    
+    # Cliente 1: Amaru Mojica (ya existe como usuario, ahora también como cliente)
+    amaru_client_id = str(uuid.uuid4())
+    amaru_client_doc = {
+        "id": amaru_client_id,
+        "company_id": pactum_company_id,
+        "name": "Amaru José Mojica López",
+        "email": "activo2_26@gmail.com",
+        "phone": "+505 8888-8888",
+        "company_name": "Amaru Mojica - Independiente",
+        "address": "Managua",
+        "city": "Managua",
+        "country": "Nicaragua",
+        "notes": "Cliente principal - Proyecto CRM Multi-Empresa",
+        "status": "active",
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.clients.insert_one(amaru_client_doc)
+    
+    # Cliente 2: Alma IA
+    alma_client_id = str(uuid.uuid4())
+    alma_client_doc = {
+        "id": alma_client_id,
+        "company_id": pactum_company_id,
+        "name": "Alma IA",
+        "email": "admin@almaia.com",
+        "phone": "+505 7777-7777",
+        "company_name": "Alma IA - Inteligencia Artificial",
+        "address": "Managua",
+        "city": "Managua",
+        "country": "Nicaragua",
+        "notes": "Partner estratégico - Soluciones de IA",
+        "status": "active",
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.clients.insert_one(alma_client_doc)
+    
+    # Cliente 3: Empresa Demo
+    demo_client_id = str(uuid.uuid4())
+    demo_client_doc = {
+        "id": demo_client_id,
+        "company_id": pactum_company_id,
+        "name": "Empresa Demo S.A.",
+        "email": "contacto@empresademo.com",
+        "phone": "+505 6666-6666",
+        "company_name": "Empresa Demo S.A.",
+        "address": "Carretera Norte, Managua",
+        "city": "Managua",
+        "country": "Nicaragua",
+        "notes": "Cliente potencial - En proceso de negociación",
+        "status": "active",
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.clients.insert_one(demo_client_doc)
+    
+    print("✅ 3 clientes creados para Software Nicaragua")
     
     # Create Alma IA user (Partner/Cliente)
     alma_user_id = str(uuid.uuid4())

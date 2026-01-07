@@ -43,16 +43,11 @@ const ActivitiesManagement = () => {
 
   const loadData = async () => {
     try {
-      const [activitiesRes, clientsRes, usersRes] = await Promise.all([
-        getActivities(),
-        getClients(),
-        getCompanyUsers()
-      ]);
+      const activitiesRes = await getActivities();
       setActivities(activitiesRes.data);
-      setClients(clientsRes.data);
-      setUsers(usersRes.data);
     } catch (error) {
-      toast.error('Error al cargar datos');
+      console.error('Error loading activities:', error);
+      toast.error('Error al cargar actividades');
     } finally {
       setLoading(false);
     }
