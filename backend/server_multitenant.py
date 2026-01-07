@@ -200,6 +200,7 @@ class TaskCreate(BaseModel):
     status: str = "backlog"  # backlog, todo, in_progress, review, done
     priority: str = "medium"  # low, medium, high, urgent
     estimated_hours: Optional[float] = None
+    estimated_minutes: Optional[int] = None  # For tasks under 1 hour
     due_date: Optional[str] = None
     tags: List[str] = []
     technical_notes: Optional[str] = None  # Endpoints, APIs, notas técnicas
@@ -214,6 +215,7 @@ class TaskUpdate(BaseModel):
     status: Optional[str] = None
     priority: Optional[str] = None
     estimated_hours: Optional[float] = None
+    estimated_minutes: Optional[int] = None  # For tasks under 1 hour
     due_date: Optional[str] = None
     tags: Optional[List[str]] = None
     actual_hours: Optional[float] = None

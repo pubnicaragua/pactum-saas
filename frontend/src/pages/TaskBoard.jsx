@@ -180,12 +180,13 @@ const TaskBoard = () => {
     try {
       if (editingTask) {
         await updateTask(editingTask.id, formData);
-        setTasks(tasks.map(t => t.id === editingTask.id ? { ...t, ...formData } : t));
+        await loadTasks(); // Reload tasks to get fresh data
         toast.success('Tarea actualizada');
       } else {
+        const projectId = localStorage.getItem('project_id');
         const response = await createTask({
           ...formData,
-          project_id: tasks[0]?.project_id || '',
+          project_id: projectId || tasks[0]?.project_id || '',
           status: 'backlog'
         });
         await loadTasks();

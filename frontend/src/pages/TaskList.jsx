@@ -293,8 +293,9 @@ const TaskList = () => {
     const file = event.target.files[0];
     if (!file) return;
     
-    if (!tasks[0]?.project_id) {
-      toast.error('No se encontró el proyecto');
+    const projectId = localStorage.getItem('project_id');
+    if (!projectId) {
+      toast.error('No se encontró el proyecto. Por favor selecciona un proyecto primero.');
       return;
     }
     
@@ -306,7 +307,7 @@ const TaskList = () => {
       
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('project_id', tasks[0].project_id);
+      formData.append('project_id', projectId);
       
       const response = await fetch(`${API_URL}/api/tasks/import`, {
         method: 'POST',
