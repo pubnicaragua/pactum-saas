@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../components/ui/badge';
 import ProjectSelector from '../components/ProjectSelector';
 import TaskAttachments from '../components/TaskAttachments';
+import TaskComments from '../components/TaskComments';
 import { toast } from 'sonner';
 import { 
   ListTodo, 
@@ -80,7 +81,8 @@ const TaskList = () => {
 
   const loadTasks = async () => {
     try {
-      const response = await getTasks();
+      const projectId = localStorage.getItem('project_id');
+      const response = await getTasks(projectId);
       setTasks(response.data);
     } catch (error) {
       toast.error('Error al cargar tareas');
@@ -835,6 +837,13 @@ const TaskList = () => {
                   />
                 </div>
               )}
+
+              <div className="border-t border-slate-700 pt-4">
+                <TaskComments 
+                  taskId={viewingTask.id} 
+                  projectId={viewingTask.project_id}
+                />
+              </div>
 
               <div className="flex gap-2 justify-end pt-4 border-t border-slate-700">
                 <Button 

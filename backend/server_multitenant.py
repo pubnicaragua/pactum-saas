@@ -16,6 +16,8 @@ import jwt
 from bson import ObjectId
 import pandas as pd
 import io
+import base64
+from pytz import timezone as pytz_timezone
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1144,6 +1146,149 @@ async def reassign_task(task_id: str, data: TaskReassign, user: dict = Depends(g
         "new_assigned_to": data.new_assigned_to,
         "reason": data.reason
     }
+
+# ===================== TASK COMMENTS =====================
+
+@api_router.get("/tasks/{task_id}/comments")
+async def get_task_comments(task_id: str, user: dict = Depends(get_current_user)):
+    """Get all comments for a task"""
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    
+    # Verify access to project
+    project = await db.projects.find_one({"id": task["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    # Get comments
+    comments = await db.task_comments.find(
+        {"task_id": task_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    return comments
+
+@api_router.post("/tasks/{task_id}/comments")
+async def create_task_comment(
+    task_id: str,
+    project_id: str = Form(...),
+    text: Optional[str] = Form(None),
+    audio: Optional[UploadFile] = File(None),
+    images: Optional[List[UploadFile]] = File(None),
+    user: dict = Depends(get_current_user)
+):
+    """Create a comment on a task with optional text, audio, and images"""
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    
+    # Verify access to project
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    # Validate at least one content type
+    if not text and not audio and not images:
+        raise HTTPException(status_code=400, detail="Debes proporcionar texto, audio o imágenes")
+    
+    # Process audio if provided
+    audio_url = None
+    audio_duration = None
+    if audio:
+        if audio.content_type not in ["audio/webm", "audio/wav", "audio/mp3", "audio/mpeg", "audio/ogg"]:
+            raise HTTPException(status_code=400, detail="Formato de audio no permitido")
+        
+        audio_content = await audio.read()
+        audio_size = len(audio_content)
+        
+        # Limit audio to 5MB (1 minute at reasonable quality)
+        if audio_size > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Audio muy grande (máx 5MB)")
+        
+        audio_base64 = base64.b64encode(audio_content).decode('utf-8')
+        audio_url = f"data:{audio.content_type};base64,{audio_base64}"
+        # Estimate duration (rough estimate, 1MB ~ 12 seconds for webm)
+        audio_duration = min(60, int(audio_size / (1024 * 1024) * 12))
+    
+    # Process images if provided
+    image_urls = []
+    if images:
+        if len(images) > 5:
+            raise HTTPException(status_code=400, detail="Máximo 5 imágenes por comentario")
+        
+        for image in images:
+            if image.content_type not in ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]:
+                raise HTTPException(status_code=400, detail=f"Formato de imagen no permitido: {image.content_type}")
+            
+            image_content = await image.read()
+            image_size = len(image_content)
+            
+            if image_size > 5 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail="Imagen muy grande (máx 5MB)")
+            
+            image_base64 = base64.b64encode(image_content).decode('utf-8')
+            image_url = f"data:{image.content_type};base64,{image_base64}"
+            image_urls.append(image_url)
+    
+    # Create comment with Chile timezone
+    chile_tz = pytz_timezone('America/Santiago')
+    chile_time = datetime.now(chile_tz)
+    
+    comment = {
+        "id": str(uuid.uuid4()),
+        "task_id": task_id,
+        "project_id": project_id,
+        "user_id": user["id"],
+        "user_name": user.get("name", user.get("email")),
+        "text": text,
+        "audio_url": audio_url,
+        "audio_duration": audio_duration,
+        "images": image_urls if image_urls else None,
+        "created_at": chile_time.isoformat(),
+        "created_at_utc": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.task_comments.insert_one(comment)
+    
+    await log_activity("task", task_id, "comment_added", user, user["company_id"], {
+        "has_text": bool(text),
+        "has_audio": bool(audio_url),
+        "has_images": bool(image_urls)
+    })
+    
+    return {"message": "Comentario creado exitosamente", "comment": comment}
+
+@api_router.delete("/tasks/{task_id}/comments/{comment_id}")
+async def delete_task_comment(task_id: str, comment_id: str, user: dict = Depends(get_current_user)):
+    """Delete a comment"""
+    comment = await db.task_comments.find_one({"id": comment_id, "task_id": task_id})
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comentario no encontrado")
+    
+    # Only comment owner or admin can delete
+    if comment["user_id"] != user["id"] and user["role"] not in ["COMPANY_ADMIN", "SUPER_ADMIN"]:
+        raise HTTPException(status_code=403, detail="No tienes permiso para eliminar este comentario")
+    
+    await db.task_comments.delete_one({"id": comment_id})
+    
+    await log_activity("task", task_id, "comment_deleted", user, user["company_id"], {
+        "comment_id": comment_id
+    })
+    
+    return {"message": "Comentario eliminado"}
 
 @api_router.get("/tasks/reassignments/history")
 async def get_reassignment_history(user: dict = Depends(get_current_user)):

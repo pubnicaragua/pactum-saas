@@ -48,7 +48,7 @@ const AdminPanel = () => {
     end_date: '',
     assigned_users: []
   });
-  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', role: 'TEAM_MEMBER' });
+  const [userForm, setUserForm] = useState({ name: '', email: '', password: '', role: 'TEAM_MEMBER', assigned_projects: [] });
 
   const API_URL = process.env.REACT_APP_API_URL || 'https://pactum-saas-backend.onrender.com';
   const token = localStorage.getItem('pactum_token');
@@ -230,11 +230,35 @@ const AdminPanel = () => {
 
       if (!response.ok) throw new Error('Error al guardar usuario');
 
+      const userData = await response.json();
+      const userId = editingUser ? editingUser.id : userData.id;
+
+      if (userForm.assigned_projects && userForm.assigned_projects.length > 0) {
+        for (const projectId of userForm.assigned_projects) {
+          const project = projects.find(p => p.id === projectId);
+          if (project) {
+            const updatedUsers = project.assigned_users || [];
+            if (!updatedUsers.includes(userId)) {
+              updatedUsers.push(userId);
+              await fetch(`${API_URL}/api/projects/${projectId}`, {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ...project, assigned_users: updatedUsers })
+              });
+            }
+          }
+        }
+      }
+
       toast.success(editingUser ? 'Usuario actualizado' : 'Usuario creado');
       setUserDialogOpen(false);
       setEditingUser(null);
-      setUserForm({ name: '', email: '', password: '', role: 'TEAM_MEMBER' });
+      setUserForm({ name: '', email: '', password: '', role: 'TEAM_MEMBER', assigned_projects: [] });
       loadUsers();
+      loadProjects();
     } catch (error) {
       toast.error('Error al guardar usuario');
       console.error(error);
@@ -480,9 +504,12 @@ const AdminPanel = () => {
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-white">Usuarios</h2>
             <Button 
-              onClick={() => {
+              onClick={async () => {
                 setEditingUser(null);
-                setUserForm({ name: '', email: '', password: '', role: 'TEAM_MEMBER' });
+                setUserForm({ name: '', email: '', password: '', role: 'TEAM_MEMBER', assigned_projects: [] });
+                if (projects.length === 0) {
+                  await loadProjects();
+                }
                 setUserDialogOpen(true);
               }}
               className="bg-blue-600 hover:bg-blue-700"
@@ -504,11 +531,13 @@ const AdminPanel = () => {
                         variant="ghost"
                         onClick={() => {
                           setEditingUser(user);
+                          const userProjects = projects.filter(p => p.assigned_users && p.assigned_users.includes(user.id)).map(p => p.id);
                           setUserForm({
                             name: user.name,
                             email: user.email,
                             password: '',
-                            role: user.role
+                            role: user.role,
+                            assigned_projects: userProjects
                           });
                           setUserDialogOpen(true);
                         }}
@@ -798,6 +827,41 @@ const AdminPanel = () => {
                 Miembro: Acceso a tareas. Usuario: Acceso a su proyecto. Admin: Acceso completo.
               </p>
             </div>
+            
+            {(userForm.role === 'TEAM_MEMBER' || userForm.role === 'USER') && (
+              <div>
+                <Label>Proyectos Asignados *</Label>
+                <p className="text-xs text-slate-500 mb-2">Selecciona los proyectos a los que tendrá acceso este usuario</p>
+                <div className="bg-slate-900 border border-slate-700 rounded-md p-3 max-h-48 overflow-y-auto">
+                  {projects.map(project => (
+                    <label key={project.id} className="flex items-center gap-2 py-2 cursor-pointer hover:bg-slate-800 px-2 rounded">
+                      <input
+                        type="checkbox"
+                        checked={userForm.assigned_projects.includes(project.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setUserForm({
+                              ...userForm,
+                              assigned_projects: [...userForm.assigned_projects, project.id]
+                            });
+                          } else {
+                            setUserForm({
+                              ...userForm,
+                              assigned_projects: userForm.assigned_projects.filter(id => id !== project.id)
+                            });
+                          }
+                        }}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-white">{project.name}</span>
+                    </label>
+                  ))}
+                  {projects.length === 0 && (
+                    <p className="text-slate-500 text-sm">No hay proyectos disponibles. Crea proyectos primero.</p>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setUserDialogOpen(false)}>
                 Cancelar
