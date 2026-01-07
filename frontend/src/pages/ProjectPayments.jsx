@@ -35,7 +35,7 @@ export default function ProjectPayments() {
   const [loading, setLoading] = useState(true);
   const [editPayment, setEditPayment] = useState(null);
   const [editData, setEditData] = useState({});
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
 
   useEffect(() => {
     fetchData();
@@ -48,9 +48,15 @@ export default function ProjectPayments() {
         getPhases()
       ]);
       
+      // Filter payments by current project
+      const projectId = localStorage.getItem('project_id');
+      const filteredPayments = projectId 
+        ? paymentsRes.data.filter(p => p.project_id === projectId)
+        : paymentsRes.data;
+      
       // Check for delayed payments (48h rule)
       const now = new Date();
-      const updatedPayments = paymentsRes.data.map(payment => {
+      const updatedPayments = filteredPayments.map(payment => {
         if (payment.status === 'pendiente') {
           const dueDate = new Date(payment.due_date);
           const diffHours = (now - dueDate) / (1000 * 60 * 60);

@@ -38,7 +38,7 @@ const TaskBoard = () => {
   const [taskAttachments, setTaskAttachments] = useState([]);
   const [viewingTask, setViewingTask] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(user?.role === 'TEAM_MEMBER');
+  const [showOnlyMyTasks, setShowOnlyMyTasks] = useState(user?.role === 'TEAM_MEMBER' || user?.role === 'USER');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -101,7 +101,7 @@ const TaskBoard = () => {
   const getTasksByStatus = (status) => {
     let filteredTasks = tasks.filter(task => task.status === status);
     
-    if (showOnlyMyTasks && user?.role === 'TEAM_MEMBER') {
+    if (showOnlyMyTasks && (user?.role === 'TEAM_MEMBER' || user?.role === 'USER')) {
       filteredTasks = filteredTasks.filter(task => task.assigned_to === user.id);
     }
     
@@ -277,7 +277,7 @@ const TaskBoard = () => {
         
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {user?.role === 'TEAM_MEMBER' && (
+          {(user?.role === 'TEAM_MEMBER' || user?.role === 'USER') && (
             <label className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
@@ -423,7 +423,9 @@ const TaskBoard = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {columns.map(column => {
-          const count = getTasksByStatus(column.id).length;
+          const columnTasks = getTasksByStatus(column.id);
+          const count = columnTasks.length;
+          const totalHours = columnTasks.reduce((sum, task) => sum + (task.estimated_hours || 0), 0);
           return (
             <Card key={column.id} className="border-slate-700 bg-slate-800/50">
               <CardContent className="p-4">
@@ -431,6 +433,7 @@ const TaskBoard = () => {
                   <div>
                     <p className="text-sm text-slate-400">{column.title}</p>
                     <p className="text-2xl font-bold text-white">{count}</p>
+                    <p className="text-xs text-slate-500 mt-1">⏱️ {totalHours.toFixed(1)}h</p>
                   </div>
                   <column.icon className={`h-8 w-8 text-${column.color}-400`} />
                 </div>
@@ -454,9 +457,14 @@ const TaskBoard = () => {
                 <CardTitle className="text-sm font-medium text-slate-300 flex items-center gap-2">
                   <column.icon className={`h-4 w-4 text-${column.color}-400`} />
                   {column.title}
-                  <Badge variant="secondary" className="ml-auto">
-                    {getTasksByStatus(column.id).length}
-                  </Badge>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {getTasksByStatus(column.id).length}
+                    </Badge>
+                    <Badge className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs">
+                      {getTasksByStatus(column.id).reduce((sum, task) => sum + (task.estimated_hours || 0), 0).toFixed(1)}h
+                    </Badge>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">

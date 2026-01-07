@@ -711,6 +711,7 @@ async def delete_client(client_id: str, user: dict = Depends(get_current_user), 
 async def get_activities(
     user: dict = Depends(get_current_user),
     company: dict = Depends(get_user_company),
+    project_id: Optional[str] = Query(None),
     start_date: Optional[str] = Query(None),
     end_date: Optional[str] = Query(None),
     type: Optional[str] = Query(None),
@@ -724,6 +725,10 @@ async def get_activities(
     
     query = {"company_id": company_id} if company_id else {}
     
+    # Filter by project if specified
+    if project_id:
+        query["project_id"] = project_id
+    
     if start_date:
         query["start_date"] = {"$gte": start_date}
     if end_date:
@@ -735,7 +740,7 @@ async def get_activities(
     
     activities = await db.activities.find(query, {"_id": 0}).to_list(1000)
     
-    # Populate client names
+    # Populate client names and assigned user names
     for activity in activities:
         if activity.get("client_id"):
             client = await db.clients.find_one({"id": activity["client_id"]}, {"_id": 0})

@@ -18,16 +18,27 @@ import {
 } from 'lucide-react';
 
 const ProjectDashboard = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [project, setProject] = useState(null);
   const [tasks, setTasks] = useState([]);
   const [payments, setPayments] = useState([]);
   const [phases, setPhases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   useEffect(() => {
+    const projectId = localStorage.getItem('project_id');
+    if (projectId) {
+      setSelectedProjectId(projectId);
+    }
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (selectedProjectId) {
+      loadData();
+    }
+  }, [selectedProjectId]);
 
   const loadData = async () => {
     try {
@@ -38,12 +49,29 @@ const ProjectDashboard = () => {
         getPhases()
       ]);
       
-      if (projectsRes.data.length > 0) {
-        setProject(projectsRes.data[0]);
+      const projectId = selectedProjectId || localStorage.getItem('project_id');
+      let selectedProject = null;
+      
+      if (projectId) {
+        selectedProject = projectsRes.data.find(p => p.id === projectId);
       }
-      setTasks(tasksRes.data);
-      setPayments(paymentsRes.data);
-      setPhases(phasesRes.data);
+      if (!selectedProject && projectsRes.data.length > 0) {
+        selectedProject = projectsRes.data[0];
+        setSelectedProjectId(selectedProject.id);
+      }
+      
+      setProject(selectedProject);
+      
+      // Filter data by selected project
+      if (projectId) {
+        setTasks(tasksRes.data.filter(t => t.project_id === projectId));
+        setPayments(paymentsRes.data.filter(p => p.project_id === projectId));
+        setPhases(phasesRes.data.filter(p => p.project_id === projectId));
+      } else {
+        setTasks(tasksRes.data);
+        setPayments(paymentsRes.data);
+        setPhases(phasesRes.data);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
