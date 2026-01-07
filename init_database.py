@@ -416,47 +416,27 @@ async def seed_initial_data():
     }
     await db.clients.insert_one(demo_client_doc)
     
-    # Cliente 4: Investi
-    investi_client_id = str(uuid.uuid4())
-    investi_client_doc = {
-        "id": investi_client_id,
+    # Cliente 4: Solvendo
+    solvendo_client_id = str(uuid.uuid4())
+    solvendo_client_doc = {
+        "id": solvendo_client_id,
         "company_id": pactum_company_id,
-        "name": "Investi",
-        "email": "contacto@investi.com",
+        "name": "Solvendo",
+        "email": "admin@solvendo.com",
         "phone": "+505 5555-5555",
-        "company_name": "Investi - Inversiones",
+        "company_name": "Solvendo - Soluciones Empresariales",
         "address": "Managua",
         "city": "Managua",
         "country": "Nicaragua",
-        "notes": "Cliente de inversiones - Pago pendiente $3,286 (9% comisión)",
+        "notes": "Cliente/Partner - Proyecto $15,000",
         "status": "active",
         "created_by": pactum_admin_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
-    await db.clients.insert_one(investi_client_doc)
+    await db.clients.insert_one(solvendo_client_doc)
     
-    # Cliente 5: Korean Cable
-    korean_client_id = str(uuid.uuid4())
-    korean_client_doc = {
-        "id": korean_client_id,
-        "company_id": pactum_company_id,
-        "name": "Korean Cable",
-        "email": "contacto@koreancable.com",
-        "phone": "+505 4444-4444",
-        "company_name": "Korean Cable Nicaragua",
-        "address": "Managua",
-        "city": "Managua",
-        "country": "Nicaragua",
-        "notes": "Cliente activo - 9% de C$9,500 netos después de gastos",
-        "status": "active",
-        "created_by": pactum_admin_id,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.clients.insert_one(korean_client_doc)
-    
-    # Cliente 6: Jessy Vargas (Préstamos/Inversiones)
+    # Cliente 5: Jessy Vargas (Préstamos/Inversiones)
     jessy_client_id = str(uuid.uuid4())
     jessy_client_doc = {
         "id": jessy_client_id,
@@ -468,7 +448,7 @@ async def seed_initial_data():
         "address": "Managua",
         "city": "Managua",
         "country": "Nicaragua",
-        "notes": "Préstamos personales - Deuda total: $1,311.43 (C$47,683.68) - Código acceso: 123456",
+        "notes": "Préstamos personales - Deuda: $1,311.43 (C$47,683.68) - Comisiones pendientes: Investi $3,286 (9%), Korean Cable C$9,500 (9%), Alma IA $500 (5%) y $400 (9%) - Código: 123456",
         "status": "active",
         "created_by": pactum_admin_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -476,7 +456,7 @@ async def seed_initial_data():
     }
     await db.clients.insert_one(jessy_client_doc)
     
-    print("✅ 6 clientes creados para Software Nicaragua (Amaru, Alma IA, Demo, Investi, Korean Cable, Jessy)")
+    print("✅ 5 clientes creados para Software Nicaragua (Amaru, Alma IA, Demo, Solvendo, Jessy)")
     
     # Create Alma IA user (Partner/Cliente)
     alma_user_id = str(uuid.uuid4())
