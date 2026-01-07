@@ -16,6 +16,7 @@ import ProjectPhases from './pages/ProjectPhases';
 import ProjectContract from './pages/ProjectContract';
 import ClientsManagement from './pages/ClientsManagement';
 import ActivitiesManagement from './pages/ActivitiesManagement';
+import InversionesJessy from './pages/InversionesJessy';
 import DashboardLayout from './components/DashboardLayout-multitenant';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -121,6 +122,9 @@ function AppRoutes() {
           </ProtectedRoute>
         } />
       </Route>
+      
+      {/* Public route for Inversiones Jessy */}
+      <Route path="/inversiones-jessy" element={<InversionesJessy />} />
       
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

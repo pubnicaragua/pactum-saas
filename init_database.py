@@ -5,10 +5,8 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Agregar el directorio backend al path
-current_dir = Path(__file__).parent
-backend_dir = current_dir / 'backend'
-sys.path.insert(0, str(backend_dir))
+# Agregar el directorio actual al path
+sys.path.insert(0, str(Path(__file__).parent))
 
 from server_multitenant import db, hash_password
 from datetime import datetime, timezone, timedelta
@@ -418,7 +416,67 @@ async def seed_initial_data():
     }
     await db.clients.insert_one(demo_client_doc)
     
-    print("✅ 3 clientes creados para Software Nicaragua")
+    # Cliente 4: Investi
+    investi_client_id = str(uuid.uuid4())
+    investi_client_doc = {
+        "id": investi_client_id,
+        "company_id": pactum_company_id,
+        "name": "Investi",
+        "email": "contacto@investi.com",
+        "phone": "+505 5555-5555",
+        "company_name": "Investi - Inversiones",
+        "address": "Managua",
+        "city": "Managua",
+        "country": "Nicaragua",
+        "notes": "Cliente de inversiones - Pago pendiente $3,286 (9% comisión)",
+        "status": "active",
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.clients.insert_one(investi_client_doc)
+    
+    # Cliente 5: Korean Cable
+    korean_client_id = str(uuid.uuid4())
+    korean_client_doc = {
+        "id": korean_client_id,
+        "company_id": pactum_company_id,
+        "name": "Korean Cable",
+        "email": "contacto@koreancable.com",
+        "phone": "+505 4444-4444",
+        "company_name": "Korean Cable Nicaragua",
+        "address": "Managua",
+        "city": "Managua",
+        "country": "Nicaragua",
+        "notes": "Cliente activo - 9% de C$9,500 netos después de gastos",
+        "status": "active",
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.clients.insert_one(korean_client_doc)
+    
+    # Cliente 6: Jessy Vargas (Préstamos/Inversiones)
+    jessy_client_id = str(uuid.uuid4())
+    jessy_client_doc = {
+        "id": jessy_client_id,
+        "company_id": pactum_company_id,
+        "name": "Jessy Alejandro Vargas Altamirano",
+        "email": "jessy@inversiones.com",
+        "phone": "+505 3333-3333",
+        "company_name": "Jessy Vargas - Préstamos",
+        "address": "Managua",
+        "city": "Managua",
+        "country": "Nicaragua",
+        "notes": "Préstamos personales - Deuda total: $1,311.43 (C$47,683.68) - Código acceso: 123456",
+        "status": "active",
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.clients.insert_one(jessy_client_doc)
+    
+    print("✅ 6 clientes creados para Software Nicaragua (Amaru, Alma IA, Demo, Investi, Korean Cable, Jessy)")
     
     # Create Alma IA user (Partner/Cliente)
     alma_user_id = str(uuid.uuid4())
