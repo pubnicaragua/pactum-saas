@@ -402,7 +402,9 @@ async def register_company(data: CompanyCreate):
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
     user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
-    if not user or not verify_password(credentials.password, user["password"]):
+    # Soportar tanto 'password' como 'hashed_password' para compatibilidad
+    user_password = user.get("password") or user.get("hashed_password") if user else None
+    if not user or not user_password or not verify_password(credentials.password, user_password):
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     
     if user.get("status") != "active":
