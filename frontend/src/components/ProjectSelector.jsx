@@ -42,20 +42,35 @@ export default function ProjectSelector() {
     }
   };
 
-  const handleClientChange = (clientId) => {
+  const handleClientChange = async (clientId) => {
     setSelectedClient(clientId);
-    localStorage.setItem('selected_client_id', clientId);
-    
-    // Guardar también el client_id como project_id para compatibilidad
-    localStorage.setItem('project_id', clientId);
     
     const client = clients.find(c => c.id === clientId);
-    if (client) {
-      toast.success(`Viendo proyecto de: ${client.name}`);
-    }
+    if (!client) return;
     
-    // Recargar la página actual para refrescar los datos
-    window.location.reload();
+    // Buscar el proyecto de este cliente
+    try {
+      const { getProjects } = await import('../lib/api-multitenant');
+      const projectsResponse = await getProjects();
+      const clientProject = projectsResponse.data.find(p => p.client_id === clientId);
+      
+      if (clientProject) {
+        // Guardar el project_id real del cliente
+        localStorage.setItem('selected_client_id', clientId);
+        localStorage.setItem('admin_viewing_project_id', clientProject.id);
+        localStorage.setItem('project_id', clientProject.id);
+        
+        toast.success(`Viendo proyecto de: ${client.name}`);
+        
+        // Recargar la página para refrescar los datos
+        window.location.reload();
+      } else {
+        toast.error(`${client.name} no tiene proyectos asignados`);
+      }
+    } catch (error) {
+      console.error('Error al cambiar proyecto:', error);
+      toast.error('Error al cambiar de proyecto');
+    }
   };
 
   if (loading) {

@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import { getPhases, updatePhase } from '../lib/api-multitenant';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../lib/auth-multitenant';
+import { getPhases, updatePhase, createPhaseComment } from '../lib/api-multitenant';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
 import { Textarea } from '../components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import ProjectSelector from '../components/ProjectSelector';
 import { 
   Layers, 
   Calendar, 
@@ -83,11 +83,14 @@ export default function ProjectPhases() {
         <p className="text-slate-400 mt-1">Gestiona y aprueba las fases del proyecto CRM</p>
       </div>
 
+      {/* Project Selector for COMPANY_ADMIN */}
+      <ProjectSelector />
+      
       {/* Timeline */}
       <div className="relative">
         {phases.map((phase, index) => {
-          const statusKey = phase.status?.toLowerCase() || 'pendiente';
-          const StatusIcon = statusIcons[statusKey] || Clock;
+          const statusKey = String(phase.status || 'pendiente').toLowerCase();
+          const IconComponent = statusIcons[statusKey] || Clock;
           return (
             <motion.div
               key={phase.id}
@@ -106,7 +109,7 @@ export default function ProjectPhases() {
                 phase.status === 'completado' ? 'bg-emerald-500' : 
                 phase.status === 'en_progreso' ? 'bg-blue-500' : 'bg-slate-600'
               }`}>
-                <StatusIcon className="w-3 h-3 text-white" />
+                <IconComponent className="w-3 h-3 text-white" />
               </div>
 
               <Card className="bg-slate-800/50 border-slate-700/50 hover:border-slate-600 transition-colors">

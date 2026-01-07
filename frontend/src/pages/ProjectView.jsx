@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../lib/auth-multitenant';
 import { getProjects } from '../lib/api-multitenant';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import ProjectSelector from '../components/ProjectSelector';
 import { toast } from 'sonner';
