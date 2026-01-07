@@ -436,7 +436,27 @@ async def seed_initial_data():
     }
     await db.clients.insert_one(solvendo_client_doc)
     
-    # Cliente 5: Jessy Vargas (Préstamos/Inversiones)
+    # Cliente 5: Investi
+    investi_client_id = str(uuid.uuid4())
+    investi_client_doc = {
+        "id": investi_client_id,
+        "company_id": pactum_company_id,
+        "name": "Investi",
+        "email": "contacto@investi.com",
+        "phone": "+505 5555-5555",
+        "company_name": "Investi - Inversiones",
+        "address": "Managua",
+        "city": "Managua",
+        "country": "Nicaragua",
+        "notes": "Cliente de inversiones - Pago pendiente $3,286 máximo 20 Enero",
+        "status": "active",
+        "created_by": pactum_admin_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.clients.insert_one(investi_client_doc)
+    
+    # Cliente 6: Jessy Vargas (Préstamos/Inversiones)
     jessy_client_id = str(uuid.uuid4())
     jessy_client_doc = {
         "id": jessy_client_id,
@@ -448,7 +468,7 @@ async def seed_initial_data():
         "address": "Managua",
         "city": "Managua",
         "country": "Nicaragua",
-        "notes": "Préstamos personales - Deuda: $1,311.43 (C$47,683.68) - Comisiones pendientes: Investi $3,286 (9%), Korean Cable C$9,500 (9%), Alma IA $500 (5%) y $400 (9%) - Código: 123456",
+        "notes": "Préstamos personales - Deuda: $1,311.43 (C$47,683.68) - Comisiones pendientes por pagos: Investi 9%, Korean Cable 9%, Alma IA 5% y 9% - Código acceso: 123456",
         "status": "active",
         "created_by": pactum_admin_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -456,7 +476,7 @@ async def seed_initial_data():
     }
     await db.clients.insert_one(jessy_client_doc)
     
-    print("✅ 5 clientes creados para Software Nicaragua (Amaru, Alma IA, Demo, Solvendo, Jessy)")
+    print("✅ 6 clientes creados para Software Nicaragua (Amaru, Alma IA, Demo, Solvendo, Investi, Jessy)")
     
     # Create Alma IA user (Partner/Cliente)
     alma_user_id = str(uuid.uuid4())
