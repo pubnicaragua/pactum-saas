@@ -35,6 +35,8 @@ const TaskBoard = () => {
   const [reassignData, setReassignData] = useState({ new_assigned_to: '', reason: '' });
   const [users, setUsers] = useState([]);
   const [taskAttachments, setTaskAttachments] = useState([]);
+  const [viewingTask, setViewingTask] = useState(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -105,6 +107,17 @@ const TaskBoard = () => {
       urgent: 'bg-red-500/20 text-red-300 border-red-500/30'
     };
     return colors[priority] || colors.medium;
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      backlog: 'Backlog',
+      todo: 'Por Hacer',
+      in_progress: 'En Progreso',
+      review: 'En Revisión',
+      done: 'Completado'
+    };
+    return labels[status] || status;
   };
 
   const handleDragStart = (e, task) => {
@@ -432,7 +445,12 @@ const TaskBoard = () => {
                     key={task.id}
                     draggable
                     onDragStart={(e) => handleDragStart(e, task)}
-                    className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 cursor-move hover:border-blue-500 transition-colors group"
+                    onClick={() => {
+                      setViewingTask(task);
+                      setTaskAttachments(task.attachments || []);
+                      setViewDialogOpen(true);
+                    }}
+                    className="bg-slate-900/50 border border-slate-700 rounded-lg p-3 cursor-pointer hover:border-blue-500 transition-colors group"
                   >
                     <div className="flex items-start gap-2">
                       <GripVertical className="h-4 w-4 text-slate-600 mt-1 flex-shrink-0" />
@@ -462,7 +480,10 @@ const TaskBoard = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleEdit(task)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(task);
+                            }}
                             className="h-6 px-2 text-blue-400 hover:text-blue-300"
                           >
                             <Edit className="h-3 w-3" />
@@ -470,7 +491,10 @@ const TaskBoard = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => handleDelete(task.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(task.id);
+                            }}
                             className="h-6 px-2 text-red-400 hover:text-red-300"
                           >
                             <Trash2 className="h-3 w-3" />
@@ -568,6 +592,101 @@ const TaskBoard = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Vista de Detalle */}
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Detalle de Tarea</DialogTitle>
+          </DialogHeader>
+          {viewingTask && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-slate-400">Título</Label>
+                <p className="text-white font-medium">{viewingTask.title}</p>
+              </div>
+
+              {viewingTask.description && (
+                <div>
+                  <Label className="text-slate-400">Descripción</Label>
+                  <p className="text-white">{viewingTask.description}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-slate-400">Estado</Label>
+                  <Badge className="mt-1">{getStatusLabel(viewingTask.status)}</Badge>
+                </div>
+                <div>
+                  <Label className="text-slate-400">Prioridad</Label>
+                  <Badge className={`mt-1 ${getPriorityColor(viewingTask.priority)}`}>
+                    {viewingTask.priority}
+                  </Badge>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {viewingTask.estimated_hours && (
+                  <div>
+                    <Label className="text-slate-400">Horas Estimadas</Label>
+                    <p className="text-white">{viewingTask.estimated_hours}h</p>
+                  </div>
+                )}
+                {viewingTask.due_date && (
+                  <div>
+                    <Label className="text-slate-400">Fecha de Vencimiento</Label>
+                    <p className="text-white">{new Date(viewingTask.due_date).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+
+              {viewingTask.technical_notes && (
+                <div>
+                  <Label className="text-slate-400">Notas Técnicas</Label>
+                  <p className="text-white bg-slate-900 p-3 rounded border border-slate-700">
+                    {viewingTask.technical_notes}
+                  </p>
+                </div>
+              )}
+
+              {taskAttachments.length > 0 && (
+                <div>
+                  <Label className="text-slate-400">Archivos Adjuntos</Label>
+                  <TaskAttachments
+                    taskId={viewingTask.id}
+                    attachments={taskAttachments}
+                    onAttachmentAdded={(newAttachment) => {
+                      setTaskAttachments([...taskAttachments, newAttachment]);
+                      loadTasks();
+                    }}
+                    requireImages={false}
+                  />
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-end pt-4 border-t border-slate-700">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setViewDialogOpen(false)}
+                >
+                  Cerrar
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setViewDialogOpen(false);
+                    handleEdit(viewingTask);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

@@ -1160,20 +1160,24 @@ async def get_reassignment_history(user: dict = Depends(get_current_user)):
     for task in tasks:
         for reassignment in task.get("reassignment_history", []):
             # Get user names
-            from_user = await db.users.find_one({"id": reassignment.get("from_user_id")})
-            to_user = await db.users.find_one({"id": reassignment.get("to_user_id")})
-            reassigned_by_user = await db.users.find_one({"id": reassignment.get("reassigned_by")})
+            from_user_id = reassignment.get("from_user_id")
+            to_user_id = reassignment.get("to_user_id")
+            reassigned_by_id = reassignment.get("reassigned_by")
+            
+            from_user = await db.users.find_one({"id": from_user_id}) if from_user_id else None
+            to_user = await db.users.find_one({"id": to_user_id}) if to_user_id else None
+            reassigned_by_user = await db.users.find_one({"id": reassigned_by_id}) if reassigned_by_id else None
             
             reassignments.append({
                 "task_id": task["id"],
                 "task_title": task["title"],
-                "from_user_id": reassignment.get("from_user_id"),
-                "from_user_name": from_user.get("name") if from_user else "Usuario eliminado",
-                "to_user_id": reassignment.get("to_user_id"),
-                "to_user_name": to_user.get("name") if to_user else "Usuario eliminado",
-                "reassigned_by_id": reassignment.get("reassigned_by"),
-                "reassigned_by_name": reassigned_by_user.get("name") if reassigned_by_user else "Usuario eliminado",
-                "reason": reassignment.get("reason"),
+                "from_user_id": from_user_id or "sin_asignar",
+                "from_user_name": from_user.get("name") if from_user else "Sin asignar",
+                "to_user_id": to_user_id or "sin_asignar",
+                "to_user_name": to_user.get("name") if to_user else "Sin asignar",
+                "reassigned_by_id": reassigned_by_id or "sistema",
+                "reassigned_by_name": reassigned_by_user.get("name") if reassigned_by_user else "Sistema",
+                "reason": reassignment.get("reason", "Sin motivo especificado"),
                 "reassigned_at": reassignment.get("reassigned_at")
             })
     

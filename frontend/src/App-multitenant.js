@@ -62,7 +62,9 @@ function AppRoutes() {
             ? <SuperAdminDashboard /> 
             : user?.role === 'USER' 
               ? <ProjectView />
-              : <CompanyDashboard />
+              : user?.role === 'TEAM_MEMBER'
+                ? <Navigate to="/tareas" replace />
+                : <CompanyDashboard />
         } />
         
         <Route path="proyecto" element={
