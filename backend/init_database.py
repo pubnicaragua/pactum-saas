@@ -88,12 +88,28 @@ async def seed_initial_data():
     await db.users.insert_one(amaru_user_doc)
     print("✅ Usuario creado: activo2_26@gmail.com (Amaru Mojica)")
     
+    # Create client for Amaru Mojica project
+    amaru_client_id = str(uuid.uuid4())
+    amaru_client_doc = {
+        "id": amaru_client_id,
+        "name": "Amaru José Mojica López",
+        "email": "activo2_26@gmail.com",
+        "phone": "+505 8888-8888",
+        "address": "Managua, Nicaragua",
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.clients.insert_one(amaru_client_doc)
+    print("✅ Cliente creado: Amaru José Mojica López")
+    
     # Create project for Amaru Mojica with complete details
     amaru_project_id = str(uuid.uuid4())
     amaru_project_doc = {
         "id": amaru_project_id,
         "name": "Business & Technology - Sistema de Gestión Empresarial",
         "description": "Desarrollo completo de sistema de gestión empresarial con 52 módulos/asignaciones incluyendo CRM, facturación, inventario, reportes avanzados y dashboards ejecutivos",
+        "client_id": amaru_client_id,
         "client_name": "Amaru José Mojica López",
         "budget": 5200.00,
         "status": "en_progreso",
@@ -499,6 +515,7 @@ async def seed_initial_data():
         "id": alma_project_id,
         "name": "Alma IA - Plataforma de Inteligencia Artificial",
         "description": "Desarrollo de plataforma de IA con procesamiento de lenguaje natural y análisis predictivo",
+        "client_id": alma_client_id,
         "client_name": "Alma IA",
         "budget": 8500.00,
         "status": "en_progreso",
@@ -543,6 +560,7 @@ async def seed_initial_data():
         "id": investi_project_id,
         "name": "Investi - Sistema de Gestión de Inversiones",
         "description": "Plataforma completa para gestión de portafolios de inversión y análisis financiero",
+        "client_id": investi_client_id,
         "client_name": "Investi",
         "budget": 12000.00,
         "status": "en_progreso",
@@ -587,6 +605,7 @@ async def seed_initial_data():
         "id": solvendo_project_id,
         "name": "Solvendo - Plataforma de Soluciones Empresariales",
         "description": "Sistema ERP completo con módulos de contabilidad, inventario y recursos humanos",
+        "client_id": solvendo_client_id,
         "client_name": "Solvendo",
         "budget": 15000.00,
         "status": "en_progreso",
