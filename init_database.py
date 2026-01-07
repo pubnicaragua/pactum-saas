@@ -5,8 +5,10 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Agregar el directorio actual al path
-sys.path.insert(0, str(Path(__file__).parent))
+# Agregar el directorio backend al path
+current_dir = Path(__file__).parent
+backend_dir = current_dir / 'backend'
+sys.path.insert(0, str(backend_dir))
 
 from server_multitenant import db, hash_password
 from datetime import datetime, timezone, timedelta
