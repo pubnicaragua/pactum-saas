@@ -13,9 +13,14 @@ from passlib.context import CryptContext
 # Add backend directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# MongoDB connection - usar variable de entorno de Render
-MONGODB_URL = os.getenv("MONGODB_URI") or os.getenv("MONGODB_URL", "mongodb+srv://pubnicaragua:Pactum2026@cluster0.mongodb.net/?retryWrites=true&w=majority")
-DATABASE_NAME = "pactum_saas"
+# MongoDB connection - usar la misma variable que server_multitenant.py
+MONGODB_URL = os.environ.get("MONGO_URL") or os.getenv("MONGODB_URI") or os.getenv("MONGODB_URL")
+DATABASE_NAME = os.environ.get("DB_NAME", "pactum_saas")
+
+if not MONGODB_URL:
+    print("❌ ERROR: Variable de entorno MONGO_URL no está configurada en Render")
+    print("   Asegúrate de que las variables de entorno estén configuradas en Render Dashboard")
+    exit(1)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
