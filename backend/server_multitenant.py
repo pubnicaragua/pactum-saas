@@ -920,33 +920,42 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[str] = No
     """Get tasks for user's projects"""
     query = {}
     
-    # TEAM_MEMBER solo ve tareas de sus proyectos asignados
-    if user["role"] == "TEAM_MEMBER":
-        user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
-        if user_projects:
+    # If project_id is provided, filter by it first
+    if project_id:
+        query["project_id"] = project_id
+    else:
+        # TEAM_MEMBER solo ve tareas de sus proyectos asignados
+        if user["role"] == "TEAM_MEMBER":
+            user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+            if user_projects:
+                project_ids = [p["id"] for p in user_projects]
+                query["project_id"] = {"$in": project_ids}
+            else:
+                # Si no tiene proyectos asignados, no ve ninguna tarea
+                query["project_id"] = {"$in": []}
+        # Users can only see tasks from their assigned projects
+        elif user["role"] == "USER":
+            user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
             project_ids = [p["id"] for p in user_projects]
             query["project_id"] = {"$in": project_ids}
         else:
-            # Si no tiene proyectos asignados, no ve ninguna tarea
-            query["project_id"] = {"$in": []}
-    # Users can only see tasks from their assigned projects
-    elif user["role"] == "USER":
-        user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
-        project_ids = [p["id"] for p in user_projects]
-        query["project_id"] = {"$in": project_ids}
-    else:
-        # Company admins see all tasks from their company's projects
-        company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
-        project_ids = [p["id"] for p in company_projects]
-        query["project_id"] = {"$in": project_ids}
-    
-    if project_id:
-        query["project_id"] = project_id
+            # Company admins see all tasks from their company's projects
+            company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in company_projects]
+            query["project_id"] = {"$in": project_ids}
     
     if status:
         query["status"] = status
     
     tasks = await db.tasks.find(query, {"_id": 0}).to_list(1000)
+    
+    # Enrich tasks with assigned user names
+    for task in tasks:
+        if task.get("assigned_to"):
+            assigned_user = await db.users.find_one({"id": task["assigned_to"]}, {"_id": 0, "name": 1})
+            if assigned_user:
+                task["assigned_to_name"] = assigned_user.get("name", "Sin asignar")
+    
     return tasks
 
 @api_router.post("/tasks")
@@ -1726,17 +1735,18 @@ async def get_payments(project_id: Optional[str] = None, user: dict = Depends(ge
     """Get payments for user's projects"""
     query = {}
     
-    if user["role"] == "USER":
-        user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
-        project_ids = [p["id"] for p in user_projects]
-        query["project_id"] = {"$in": project_ids}
-    else:
-        company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
-        project_ids = [p["id"] for p in company_projects]
-        query["project_id"] = {"$in": project_ids}
-    
+    # If project_id is provided, filter by it first
     if project_id:
         query["project_id"] = project_id
+    else:
+        if user["role"] == "USER":
+            user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in user_projects]
+            query["project_id"] = {"$in": project_ids}
+        else:
+            company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in company_projects]
+            query["project_id"] = {"$in": project_ids}
     
     payments = await db.payments.find(query, {"_id": 0}).sort("payment_number", 1).to_list(100)
     return payments
@@ -1804,17 +1814,18 @@ async def get_phases(project_id: Optional[str] = None, user: dict = Depends(get_
     """Get phases for user's projects"""
     query = {}
     
-    if user["role"] == "USER":
-        user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
-        project_ids = [p["id"] for p in user_projects]
-        query["project_id"] = {"$in": project_ids}
-    else:
-        company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
-        project_ids = [p["id"] for p in company_projects]
-        query["project_id"] = {"$in": project_ids}
-    
+    # If project_id is provided, filter by it first
     if project_id:
         query["project_id"] = project_id
+    else:
+        if user["role"] == "USER":
+            user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in user_projects]
+            query["project_id"] = {"$in": project_ids}
+        else:
+            company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in company_projects]
+            query["project_id"] = {"$in": project_ids}
     
     phases = await db.phases.find(query, {"_id": 0}).sort("order", 1).to_list(100)
     return phases

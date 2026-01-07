@@ -6,6 +6,8 @@ import { Badge } from '../components/ui/badge';
 import { Progress } from '../components/ui/progress';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
+import { Textarea } from '../components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import ProjectSelector from '../components/ProjectSelector';
 import ProjectDocumentation from '../components/ProjectDocumentation';
 import { toast } from 'sonner';
@@ -51,11 +53,12 @@ const ProjectDashboard = () => {
 
   const loadData = async () => {
     try {
+      const projectId = localStorage.getItem('project_id');
       const [projectsRes, tasksRes, paymentsRes, phasesRes] = await Promise.all([
         getProjects(),
-        getTasks(),
-        getPayments(),
-        getPhases()
+        getTasks(projectId),
+        getPayments(projectId),
+        getPhases(projectId)
       ]);
       
       if (projectsRes.data.length > 0) {
@@ -63,8 +66,13 @@ const ProjectDashboard = () => {
         setProject(proj);
         setEditData({
           name: proj.name || '',
+          description: proj.description || '',
           progress_percentage: proj.progress_percentage || 0,
-          estimated_days: proj.estimated_days || 30
+          estimated_days: proj.estimated_days || 30,
+          budget: proj.budget || 0,
+          start_date: proj.start_date ? proj.start_date.split('T')[0] : '',
+          end_date: proj.end_date ? proj.end_date.split('T')[0] : '',
+          status: proj.status || 'active'
         });
       }
       setTasks(tasksRes.data);
@@ -132,8 +140,13 @@ const ProjectDashboard = () => {
     if (project) {
       setEditData({
         name: project.name || '',
+        description: project.description || '',
         progress_percentage: project.progress_percentage || 0,
-        estimated_days: project.estimated_days || 30
+        estimated_days: project.estimated_days || 30,
+        budget: project.budget || 0,
+        start_date: project.start_date ? project.start_date.split('T')[0] : '',
+        end_date: project.end_date ? project.end_date.split('T')[0] : '',
+        status: project.status || 'active'
       });
     }
   };
@@ -201,6 +214,69 @@ const ProjectDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {editing && (
+              <div>
+                <label className="text-sm text-slate-400">Descripción</label>
+                <Textarea
+                  value={editData.description}
+                  onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                  className="mt-1 bg-slate-900 border-slate-700 text-white"
+                  placeholder="Descripción del proyecto"
+                  rows={3}
+                />
+              </div>
+            )}
+            {editing && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-slate-400">Presupuesto</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={editData.budget}
+                    onChange={(e) => setEditData({ ...editData, budget: parseFloat(e.target.value) || 0 })}
+                    className="mt-1 bg-slate-900 border-slate-700 text-white"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-slate-400">Estado</label>
+                  <Select value={editData.status} onValueChange={(value) => setEditData({ ...editData, status: value })}>
+                    <SelectTrigger className="mt-1 bg-slate-900 border-slate-700 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectItem value="active" className="text-white">Activo</SelectItem>
+                      <SelectItem value="on_hold" className="text-white">En Pausa</SelectItem>
+                      <SelectItem value="completed" className="text-white">Completado</SelectItem>
+                      <SelectItem value="cancelled" className="text-white">Cancelado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            {editing && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm text-slate-400">Fecha de Inicio</label>
+                  <Input
+                    type="date"
+                    value={editData.start_date}
+                    onChange={(e) => setEditData({ ...editData, start_date: e.target.value })}
+                    className="mt-1 bg-slate-900 border-slate-700 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-slate-400">Fecha de Fin</label>
+                  <Input
+                    type="date"
+                    value={editData.end_date}
+                    onChange={(e) => setEditData({ ...editData, end_date: e.target.value })}
+                    className="mt-1 bg-slate-900 border-slate-700 text-white"
+                  />
+                </div>
+              </div>
+            )}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-slate-400">Progreso General</span>
