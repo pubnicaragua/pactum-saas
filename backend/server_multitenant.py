@@ -564,6 +564,26 @@ async def get_clients(user: dict = Depends(get_current_user), company: dict = De
     if not company_id and user.get("role") != "SUPER_ADMIN":
         raise HTTPException(status_code=400, detail="Usuario no pertenece a ninguna empresa")
     
+    # TEAM_MEMBER solo ve clientes de sus proyectos asignados
+    if user.get("role") == "TEAM_MEMBER":
+        # Obtener proyectos asignados al usuario
+        user_projects = await db.projects.find(
+            {"assigned_users": user["id"]},
+            {"_id": 0, "client_id": 1}
+        ).to_list(1000)
+        
+        client_ids = [p["client_id"] for p in user_projects if p.get("client_id")]
+        
+        if not client_ids:
+            return []
+        
+        clients = await db.clients.find(
+            {"id": {"$in": client_ids}},
+            {"_id": 0}
+        ).to_list(1000)
+        return clients
+    
+    # COMPANY_ADMIN y SUPER_ADMIN ven todos los clientes
     query = {"company_id": company_id} if company_id else {}
     clients = await db.clients.find(query, {"_id": 0}).to_list(1000)
     return clients
