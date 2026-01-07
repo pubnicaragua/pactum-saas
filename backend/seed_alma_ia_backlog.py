@@ -205,16 +205,20 @@ async def seed_alma_ia_backlog():
     
     frontend_count = 0
     for task_data in frontend_tasks:
-        task_id = str(uuid.uuid4())
+        # Usar upsert para actualizar si existe o crear si no
+        task_filter = {
+            "project_id": alma_project_id,
+            "title": task_data["title"]
+        }
         task_doc = {
-            "id": task_id,
+            "id": str(uuid.uuid4()),
             "project_id": alma_project_id,
             **task_data,
             "created_by": miguel_user_id,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.tasks.insert_one(task_doc)
+        result = await db.tasks.update_one(task_filter, {"$set": task_doc}, upsert=True)
         frontend_count += 1
         print(f"  ✅ {task_data['title']}")
     
@@ -303,16 +307,20 @@ async def seed_alma_ia_backlog():
     
     backend_count = 0
     for task_data in backend_tasks:
-        task_id = str(uuid.uuid4())
+        # Usar upsert para actualizar si existe o crear si no
+        task_filter = {
+            "project_id": alma_project_id,
+            "title": task_data["title"]
+        }
         task_doc = {
-            "id": task_id,
+            "id": str(uuid.uuid4()),
             "project_id": alma_project_id,
             **task_data,
             "created_by": jroque_user_id,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.tasks.insert_one(task_doc)
+        result = await db.tasks.update_one(task_filter, {"$set": task_doc}, upsert=True)
         backend_count += 1
         print(f"  ✅ {task_data['title']}")
     
@@ -425,16 +433,20 @@ async def seed_alma_ia_backlog():
     
     issues_count = 0
     for task_data in issues_tasks:
-        task_id = str(uuid.uuid4())
+        # Usar upsert para actualizar si existe o crear si no
+        task_filter = {
+            "project_id": alma_project_id,
+            "title": task_data["title"]
+        }
         task_doc = {
-            "id": task_id,
+            "id": str(uuid.uuid4()),
             "project_id": alma_project_id,
             **task_data,
             "created_by": jroque_user_id if "Backend" in task_data.get("description", "") or "endpoint" in task_data.get("description", "").lower() else miguel_user_id,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.tasks.insert_one(task_doc)
+        result = await db.tasks.update_one(task_filter, {"$set": task_doc}, upsert=True)
         issues_count += 1
         print(f"  ✅ {task_data['title']}")
     
