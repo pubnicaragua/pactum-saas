@@ -1509,9 +1509,11 @@ async def seed_initial_data():
 
 # ===================== CORS & STARTUP =====================
 
+# Configurar CORS para permitir el frontend de Netlify
+cors_origins = os.environ.get('CORS_ORIGINS', 'https://pactumsaas.netlify.app,http://localhost:3000')
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=cors_origins.split(',') if cors_origins != '*' else ['*'],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

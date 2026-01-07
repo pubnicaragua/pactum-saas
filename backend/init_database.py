@@ -521,6 +521,9 @@ async def seed_initial_data():
         "status": "en_progreso",
         "start_date": datetime.now(timezone.utc).isoformat(),
         "end_date": (datetime.now(timezone.utc) + timedelta(days=120)).isoformat(),
+        "contract_date": datetime.now(timezone.utc).isoformat(),
+        "contract_number": "ALMA-IA-2026-001",
+        "payment_terms": "4 Hitos (25% c/u)",
         "assigned_users": [alma_user_id],
         "deliverables": [
             "API de procesamiento de lenguaje natural",
@@ -566,6 +569,9 @@ async def seed_initial_data():
         "status": "en_progreso",
         "start_date": datetime.now(timezone.utc).isoformat(),
         "end_date": (datetime.now(timezone.utc) + timedelta(days=150)).isoformat(),
+        "contract_date": datetime.now(timezone.utc).isoformat(),
+        "contract_number": "INVESTI-2026-001",
+        "payment_terms": "3 pagos (40%, 30%, 30%)",
         "assigned_users": [investi_user_id],
         "deliverables": [
             "Sistema de gestión de portafolios",
@@ -611,6 +617,9 @@ async def seed_initial_data():
         "status": "en_progreso",
         "start_date": datetime.now(timezone.utc).isoformat(),
         "end_date": (datetime.now(timezone.utc) + timedelta(days=180)).isoformat(),
+        "contract_date": datetime.now(timezone.utc).isoformat(),
+        "contract_number": "SOLVENDO-2026-001",
+        "payment_terms": "5 Hitos (20% c/u)",
         "assigned_users": [solvendo_user_id],
         "deliverables": [
             "Módulo de contabilidad completo",
