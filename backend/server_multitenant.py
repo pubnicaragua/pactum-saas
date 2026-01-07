@@ -202,6 +202,29 @@ class TaskReassign(BaseModel):
     new_assigned_to: str  # user_id del nuevo asignado
     reason: str  # Motivo de la reasignación
 
+# Financial Models
+class FinancialPaymentItem(BaseModel):
+    concept: str
+    planned_amount: float
+    executed_amount: float = 0.0
+    status_note: Optional[str] = None
+
+class FinancialReserveItem(BaseModel):
+    concept: str
+    reserve_amount: float
+    executed_amount: float = 0.0
+    status_note: Optional[str] = None
+
+class FinancialReportCreate(BaseModel):
+    total_income: float
+    payments: List[FinancialPaymentItem]
+    reserves: List[FinancialReserveItem]
+
+class FinancialReportUpdate(BaseModel):
+    total_income: Optional[float] = None
+    payments: Optional[List[FinancialPaymentItem]] = None
+    reserves: Optional[List[FinancialReserveItem]] = None
+
 # Payment Models
 class PaymentCreate(BaseModel):
     project_id: str
@@ -1174,6 +1197,137 @@ async def import_tasks_excel(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al importar tareas: {str(e)}")
+
+# ===================== FINANCIAL MANAGEMENT =====================
+
+@api_router.get("/financial/report")
+async def get_financial_report(user: dict = Depends(get_current_user)):
+    """Get financial report - Only for admin@pactum.com"""
+    if user["email"] != "admin@pactum.com":
+        raise HTTPException(status_code=403, detail="Acceso denegado - Solo para administrador")
+    
+    report = await db.financial_reports.find_one(
+        {"user_id": user["id"]},
+        {"_id": 0},
+        sort=[("created_at", -1)]
+    )
+    
+    if not report:
+        # Return default empty report
+        return {
+            "id": None,
+            "user_id": user["id"],
+            "total_income": 47606.0,
+            "payments": [],
+            "reserves": [],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    
+    return report
+
+@api_router.post("/financial/report")
+async def create_financial_report(data: FinancialReportCreate, user: dict = Depends(get_current_user)):
+    """Create or update financial report - Only for admin@pactum.com"""
+    if user["email"] != "admin@pactum.com":
+        raise HTTPException(status_code=403, detail="Acceso denegado - Solo para administrador")
+    
+    # Check if report exists
+    existing_report = await db.financial_reports.find_one({"user_id": user["id"]})
+    
+    report_data = {
+        "user_id": user["id"],
+        "total_income": data.total_income,
+        "payments": [p.dict() for p in data.payments],
+        "reserves": [r.dict() for r in data.reserves],
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if existing_report:
+        # Update existing report
+        await db.financial_reports.update_one(
+            {"user_id": user["id"]},
+            {"$set": report_data}
+        )
+        report_id = existing_report.get("id")
+    else:
+        # Create new report
+        report_id = str(uuid.uuid4())
+        report_data["id"] = report_id
+        report_data["created_at"] = datetime.now(timezone.utc).isoformat()
+        await db.financial_reports.insert_one(report_data)
+    
+    await log_activity("financial_report", report_id, "updated", user, user.get("company_id"), {
+        "total_income": data.total_income,
+        "payments_count": len(data.payments),
+        "reserves_count": len(data.reserves)
+    })
+    
+    return {"id": report_id, "message": "Reporte financiero actualizado"}
+
+@api_router.put("/financial/report")
+async def update_financial_report(data: FinancialReportUpdate, user: dict = Depends(get_current_user)):
+    """Update financial report - Only for admin@pactum.com"""
+    if user["email"] != "admin@pactum.com":
+        raise HTTPException(status_code=403, detail="Acceso denegado - Solo para administrador")
+    
+    report = await db.financial_reports.find_one({"user_id": user["id"]})
+    if not report:
+        raise HTTPException(status_code=404, detail="Reporte no encontrado")
+    
+    update_data = {k: v for k, v in data.dict(exclude_unset=True).items()}
+    
+    # Convert payment and reserve items to dict
+    if "payments" in update_data and update_data["payments"]:
+        update_data["payments"] = [p.dict() for p in update_data["payments"]]
+    if "reserves" in update_data and update_data["reserves"]:
+        update_data["reserves"] = [r.dict() for r in update_data["reserves"]]
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.financial_reports.update_one(
+        {"user_id": user["id"]},
+        {"$set": update_data}
+    )
+    
+    await log_activity("financial_report", report["id"], "updated", user, user.get("company_id"), update_data)
+    
+    return {"message": "Reporte financiero actualizado"}
+
+@api_router.get("/financial/summary")
+async def get_financial_summary(user: dict = Depends(get_current_user)):
+    """Get financial summary with calculations - Only for admin@pactum.com"""
+    if user["email"] != "admin@pactum.com":
+        raise HTTPException(status_code=403, detail="Acceso denegado - Solo para administrador")
+    
+    report = await db.financial_reports.find_one(
+        {"user_id": user["id"]},
+        {"_id": 0},
+        sort=[("created_at", -1)]
+    )
+    
+    if not report:
+        return {
+            "total_income": 0.0,
+            "total_assigned": 0.0,
+            "available_balance": 0.0,
+            "total_reserves": 0.0,
+            "projected_balance": 0.0
+        }
+    
+    # Calculate totals
+    total_assigned = sum(p.get("executed_amount", 0.0) for p in report.get("payments", []))
+    total_reserves = sum(r.get("reserve_amount", 0.0) for r in report.get("reserves", []))
+    available_balance = report.get("total_income", 0.0) - total_assigned
+    projected_balance = available_balance - total_reserves
+    
+    return {
+        "total_income": report.get("total_income", 0.0),
+        "total_assigned": total_assigned,
+        "available_balance": available_balance,
+        "total_reserves": total_reserves,
+        "projected_balance": projected_balance
+    }
 
 # ===================== PAYMENTS MANAGEMENT =====================
 
