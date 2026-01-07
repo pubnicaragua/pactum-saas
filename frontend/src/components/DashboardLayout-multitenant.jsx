@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
-import { Building2, LayoutDashboard, Users, Calendar, LogOut, Menu, X, Shield, Briefcase, Mountain, ListTodo, KanbanSquare, DollarSign, Layers, FileText, ArrowRightLeft } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, Calendar, LogOut, Menu, X, Shield, Briefcase, Mountain, ListTodo, KanbanSquare, DollarSign, Layers, FileText, ArrowRightLeft, Settings } from 'lucide-react';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -36,6 +36,7 @@ const DashboardLayout = () => {
   ] : [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     ...(isFinancialAdmin ? [{ name: 'Financiero', href: '/financiero', icon: DollarSign }] : []),
+    { name: 'Administración', href: '/admin', icon: Settings },
     { name: 'Clientes', href: '/clientes', icon: Users },
     { name: 'Actividades', href: '/actividades', icon: Calendar },
     { name: 'Dashboard Proyecto', href: '/dashboard-proyecto', icon: Mountain },

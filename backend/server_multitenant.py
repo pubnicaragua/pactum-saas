@@ -1657,6 +1657,56 @@ async def create_company_user(data: UserCreate, user: dict = Depends(require_com
     
     return {"id": user_id, "message": "Usuario creado"}
 
+@api_router.put("/company/users/{user_id}")
+async def update_company_user(user_id: str, data: UserUpdate, user: dict = Depends(require_company_admin), company: dict = Depends(get_user_company)):
+    """Update a user in the company"""
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if target_user["company_id"] != user["company_id"]:
+        raise HTTPException(status_code=403, detail="No puedes editar usuarios de otra compañía")
+    
+    update_data = {}
+    if data.name:
+        update_data["name"] = data.name
+    if data.email:
+        existing = await db.users.find_one({"email": data.email, "id": {"$ne": user_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Email ya registrado")
+        update_data["email"] = data.email
+    if data.password:
+        update_data["password"] = hash_password(data.password)
+    if data.role and data.role in ["USER", "COMPANY_ADMIN", "TEAM_MEMBER"]:
+        update_data["role"] = data.role
+    if data.status:
+        update_data["status"] = data.status
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one({"id": user_id}, {"$set": update_data})
+    await log_activity("user", user_id, "updated", user, user["company_id"], update_data)
+    
+    return {"message": "Usuario actualizado"}
+
+@api_router.delete("/company/users/{user_id}")
+async def delete_company_user(user_id: str, user: dict = Depends(require_company_admin), company: dict = Depends(get_user_company)):
+    """Delete a user from the company"""
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if target_user["company_id"] != user["company_id"]:
+        raise HTTPException(status_code=403, detail="No puedes eliminar usuarios de otra compañía")
+    
+    if target_user["id"] == user["id"]:
+        raise HTTPException(status_code=400, detail="No puedes eliminarte a ti mismo")
+    
+    await db.users.delete_one({"id": user_id})
+    await log_activity("user", user_id, "deleted", user, user["company_id"], {"name": target_user.get("name")})
+    
+    return {"message": "Usuario eliminado"}
+
 # ===================== MODULES =====================
 
 @api_router.get("/modules")
