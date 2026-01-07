@@ -65,13 +65,13 @@ function AppRoutes() {
         
         <Route path="proyecto" element={
           <ProtectedRoute>
-            <ProjectView />
+            {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ProjectView />}
           </ProtectedRoute>
         } />
         
         <Route path="dashboard-proyecto" element={
           <ProtectedRoute>
-            <ProjectDashboard />
+            {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ProjectDashboard />}
           </ProtectedRoute>
         } />
         

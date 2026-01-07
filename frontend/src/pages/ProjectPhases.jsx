@@ -89,8 +89,10 @@ export default function ProjectPhases() {
       {/* Timeline */}
       <div className="relative">
         {phases.map((phase, index) => {
-          const statusKey = String(phase.status || 'pendiente').toLowerCase();
+          // Normalizar status y obtener icono de forma segura
+          const statusKey = phase.status ? String(phase.status).toLowerCase().trim() : 'pendiente';
           const IconComponent = statusIcons[statusKey] || Clock;
+          
           return (
             <motion.div
               key={phase.id}
@@ -106,10 +108,10 @@ export default function ProjectPhases() {
               
               {/* Timeline dot */}
               <div className={`absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center ${
-                phase.status === 'completado' ? 'bg-emerald-500' : 
-                phase.status === 'en_progreso' ? 'bg-blue-500' : 'bg-slate-600'
+                statusKey === 'completado' ? 'bg-emerald-500' : 
+                statusKey === 'en_progreso' ? 'bg-blue-500' : 'bg-slate-600'
               }`}>
-                <IconComponent className="w-3 h-3 text-white" />
+                {React.createElement(IconComponent, { className: "w-3 h-3 text-white" })}
               </div>
 
               <Card className="bg-slate-800/50 border-slate-700/50 hover:border-slate-600 transition-colors">
