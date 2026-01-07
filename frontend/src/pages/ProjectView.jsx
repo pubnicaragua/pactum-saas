@@ -147,7 +147,7 @@ const ProjectView = () => {
                 </div>
                 <div>
                   <p className="text-sm text-slate-400">Duración</p>
-                  <p className="text-xl font-bold text-white">90 días</p>
+                  <p className="text-xl font-bold text-white">30 días</p>
                 </div>
               </div>
             </div>
@@ -384,6 +384,38 @@ const ProjectView = () => {
                       }`}
                       style={{ width: `${milestone.percentage}%` }}
                     />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Team Members */}
+      {project.team_members && project.team_members.length > 0 && (
+        <Card className="border border-slate-700 bg-slate-800/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-white">
+              <Users className="h-5 w-5 text-blue-400" />
+              Equipo de Desarrollo
+            </CardTitle>
+            <CardDescription className="text-slate-400">Miembros asignados al proyecto</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {project.team_members.map((member, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center gap-3 p-4 bg-slate-900/50 rounded-lg border border-slate-700"
+                >
+                  <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-lg">{member.name.charAt(0)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-white truncate">{member.name}</p>
+                    <p className="text-sm text-slate-400 truncate">{member.role}</p>
+                    <p className="text-xs text-slate-500 truncate">{member.email}</p>
                   </div>
                 </div>
               ))}

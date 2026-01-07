@@ -160,7 +160,7 @@ const TaskList = () => {
   const handleExport = async () => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'https://pactum-saas-backend.onrender.com';
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('pactum_token');
       
       const response = await fetch(`${API_URL}/api/tasks/export`, {
         headers: {
@@ -200,7 +200,7 @@ const TaskList = () => {
     
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'https://pactum-saas-backend.onrender.com';
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('pactum_token');
       
       const formData = new FormData();
       formData.append('file', file);

@@ -86,7 +86,7 @@ export default function ProjectPhases() {
       {/* Timeline */}
       <div className="relative">
         {phases.map((phase, index) => {
-          const StatusIcon = statusIcons[phase.status];
+          const StatusIcon = statusIcons[phase.status] || Clock;
           return (
             <motion.div
               key={phase.id}
@@ -102,8 +102,8 @@ export default function ProjectPhases() {
               
               {/* Timeline dot */}
               <div className={`absolute left-0 top-1 w-6 h-6 rounded-full flex items-center justify-center ${
-                phase.status === 'Completada' ? 'bg-emerald-500' : 
-                phase.status === 'En progreso' ? 'bg-blue-500' : 'bg-slate-600'
+                phase.status === 'completado' ? 'bg-emerald-500' : 
+                phase.status === 'en_progreso' ? 'bg-blue-500' : 'bg-slate-600'
               }`}>
                 <StatusIcon className="w-3 h-3 text-white" />
               </div>
@@ -133,9 +133,9 @@ export default function ProjectPhases() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-900 border-slate-700">
-                            <SelectItem value="Pendiente">Pendiente</SelectItem>
-                            <SelectItem value="En progreso">En progreso</SelectItem>
-                            <SelectItem value="Completada">Completada</SelectItem>
+                            <SelectItem value="pendiente">Pendiente</SelectItem>
+                            <SelectItem value="en_progreso">En progreso</SelectItem>
+                            <SelectItem value="completado">Completada</SelectItem>
                           </SelectContent>
                         </Select>
                       )}
