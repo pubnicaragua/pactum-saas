@@ -13,8 +13,8 @@ from passlib.context import CryptContext
 # Add backend directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# MongoDB connection
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb+srv://pubnicaragua:Pactum2026@cluster0.mongodb.net/?retryWrites=true&w=majority")
+# MongoDB connection - usar variable de entorno de Render
+MONGODB_URL = os.getenv("MONGODB_URI") or os.getenv("MONGODB_URL", "mongodb+srv://pubnicaragua:Pactum2026@cluster0.mongodb.net/?retryWrites=true&w=majority")
 DATABASE_NAME = "pactum_saas"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -128,7 +128,7 @@ async def seed_alma_ia_backlog():
             "title": "HomeScreen2 (Gamificado) - Diseño y Maquetación",
             "description": "Implementar pantalla principal gamificada con elementos visuales atractivos, badges, progreso del usuario y animaciones. Incluir screenshots del progreso cada hora.",
             "priority": "high",
-            "estimated_hours": 16,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -136,7 +136,7 @@ async def seed_alma_ia_backlog():
             "title": "Módulo Diario - Frontend",
             "description": "Crear interfaz para registro diario del usuario. Incluir formularios, validaciones y feedback visual. Documentar endpoints utilizados y subir screenshots.",
             "priority": "high",
-            "estimated_hours": 12,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -144,7 +144,7 @@ async def seed_alma_ia_backlog():
             "title": "Módulo SOS - Frontend",
             "description": "Implementar botón de emergencia SOS con grabación de audio/video, envío de texto y geolocalización. Probar en iOS y Android. Screenshots cada hora.",
             "priority": "urgent",
-            "estimated_hours": 14,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -152,7 +152,7 @@ async def seed_alma_ia_backlog():
             "title": "Módulo PyR (Preguntas y Respuestas) - Frontend",
             "description": "Crear interfaz para sistema de preguntas diarias (Emoción, Neurodivergencia, Patologías). Validar que todas las preguntas se muestren correctamente. Documentar endpoints.",
             "priority": "high",
-            "estimated_hours": 10,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -160,7 +160,7 @@ async def seed_alma_ia_backlog():
             "title": "Módulo AVISOS - Frontend",
             "description": "Implementar sistema de notificaciones y avisos. Diferenciar visualmente avisos simples de encuestas (colores + iconos). Ordenar descendente (más reciente primero). Screenshots.",
             "priority": "high",
-            "estimated_hours": 12,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -168,7 +168,7 @@ async def seed_alma_ia_backlog():
             "title": "Módulo ENCUESTAS - Frontend",
             "description": "Crear interfaz para encuestas dinámicas. Permitir 2-4 opciones (no obligar 4ta opción). Navegación desde avisos a encuestas. Manejo de errores al guardar. Screenshots.",
             "priority": "high",
-            "estimated_hours": 14,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -176,7 +176,7 @@ async def seed_alma_ia_backlog():
             "title": "Módulo BENEFICIOS - Frontend",
             "description": "Implementar pantalla de beneficios para usuarios. Diseño atractivo con cards, imágenes y descripciones. Documentar endpoints y subir screenshots cada hora.",
             "priority": "medium",
-            "estimated_hours": 10,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -184,7 +184,15 @@ async def seed_alma_ia_backlog():
             "title": "Registro Semanal - Frontend",
             "description": "Crear interfaz para registro semanal de actividades. Calendario interactivo, gráficas de progreso. Validar que no se rompa la gráfica al seleccionar fechas. Screenshots.",
             "priority": "medium",
-            "estimated_hours": 12,
+            "estimated_hours": 1,
+            "status": "backlog",
+            "assigned_to": miguel_user_id
+        },
+        {
+            "title": "Pruebas y Validaciones Frontend - Miguel",
+            "description": "Realizar pruebas exhaustivas de todos los módulos frontend implementados. Detectar errores, validar flujos de usuario, verificar responsive design en iOS y Android. Documentar bugs encontrados antes de entregar.",
+            "priority": "high",
+            "estimated_hours": 2,
             "status": "backlog",
             "assigned_to": miguel_user_id
         }
@@ -218,7 +226,7 @@ async def seed_alma_ia_backlog():
             "title": "Validar funcionalidad en App y Web",
             "description": "Verificar que todos los endpoints funcionen correctamente en ambas plataformas (App móvil y Web). Documentar diferencias y problemas encontrados. Screenshots de pruebas.",
             "priority": "urgent",
-            "estimated_hours": 8,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -226,7 +234,7 @@ async def seed_alma_ia_backlog():
             "title": "Garantizar Preguntas Diarias - Sistema automático",
             "description": "Implementar sistema que garantice que las 3 preguntas diarias (Emoción, Neurodivergencia, Patologías) se muestren correctamente. Validar nombres exactos en BD vs App.",
             "priority": "urgent",
-            "estimated_hours": 6,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -234,7 +242,7 @@ async def seed_alma_ia_backlog():
             "title": "Informes automáticos - Inicio y fin de día",
             "description": "Crear sistema de informes automáticos que se envíen al inicio y final del día con status del sistema, usuarios activos, errores y métricas clave.",
             "priority": "high",
-            "estimated_hours": 10,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -242,7 +250,7 @@ async def seed_alma_ia_backlog():
             "title": "Garantizar operación Dev y Prod con datos correctos",
             "description": "Validar que ambos ambientes (Desarrollo y Producción) operen correctamente con sus respectivos datos. Documentar configuraciones y diferencias.",
             "priority": "high",
-            "estimated_hours": 8,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -250,7 +258,7 @@ async def seed_alma_ia_backlog():
             "title": "Fix: Endpoint preguntas - Validar nombres exactos",
             "description": "Revisar endpoint de preguntas diarias. El problema reportado: solo aparecen 2 de 3 preguntas (falta Patologías). Validar que nombres en BD coincidan exactamente con lo que espera la App.",
             "priority": "urgent",
-            "estimated_hours": 4,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -258,7 +266,7 @@ async def seed_alma_ia_backlog():
             "title": "Fix: SOS Audio - Visualización en Web",
             "description": "Corregir bug donde audios enviados por SOS desde App no se visualizan en Web. Validar almacenamiento y recuperación de archivos de audio.",
             "priority": "high",
-            "estimated_hours": 6,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -266,7 +274,7 @@ async def seed_alma_ia_backlog():
             "title": "Fix: Encuestas - Error al guardar segunda respuesta",
             "description": "Investigar y corregir error que ocurre al guardar la segunda respuesta de una encuesta. Primera respuesta OK, segunda falla. Logs y screenshots.",
             "priority": "high",
-            "estimated_hours": 5,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -274,7 +282,15 @@ async def seed_alma_ia_backlog():
             "title": "Optimización: Cambio de contraseña",
             "description": "Revisar flujo de cambio de contraseña. Reportado: indica que guardó OK pero luego no permite login. Validar hash y actualización en BD.",
             "priority": "medium",
-            "estimated_hours": 4,
+            "estimated_hours": 1,
+            "status": "backlog",
+            "assigned_to": jroque_user_id
+        },
+        {
+            "title": "Pruebas y Validaciones Backend - Jonathan",
+            "description": "Realizar pruebas exhaustivas de todos los endpoints y funcionalidades backend. Validar respuestas, tiempos de respuesta, manejo de errores. Probar en Dev y Prod. Documentar bugs encontrados antes de entregar.",
+            "priority": "high",
+            "estimated_hours": 2,
             "status": "backlog",
             "assigned_to": jroque_user_id
         }
@@ -308,7 +324,7 @@ async def seed_alma_ia_backlog():
             "title": "BUG iOS: Gráfica de actividades se rompe al seleccionar fecha",
             "description": "Reproducir y corregir bug donde la gráfica en sección de actividades se rompe al escoger una fecha. Solo reportado en iOS. Screenshots del error.",
             "priority": "high",
-            "estimated_hours": 4,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -316,7 +332,7 @@ async def seed_alma_ia_backlog():
             "title": "BUG iOS: SOS exige texto cuando solo se grabó voz",
             "description": "Corregir validación en SOS. Si usuario solo graba voz, no debería exigir texto obligatorio. Validar en iOS y Android.",
             "priority": "high",
-            "estimated_hours": 3,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -324,7 +340,7 @@ async def seed_alma_ia_backlog():
             "title": "BUG iOS: Cerrar sesión cierra la app en lugar de ir a login",
             "description": "Al cerrar sesión, la app se cierra completamente. Debería redirigir a pantalla de login. Corregir navegación.",
             "priority": "medium",
-            "estimated_hours": 2,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -332,7 +348,7 @@ async def seed_alma_ia_backlog():
             "title": "UX: Avisos sin título muestran 'Sin título'",
             "description": "Mejorar UX: cuando un aviso no tiene título, mostrar primeras palabras del contenido en lugar de 'Sin título'.",
             "priority": "low",
-            "estimated_hours": 2,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -340,7 +356,7 @@ async def seed_alma_ia_backlog():
             "title": "UX: Ordenar avisos descendente (más reciente primero)",
             "description": "Cambiar orden de avisos para que el más reciente aparezca primero (orden descendente por fecha).",
             "priority": "medium",
-            "estimated_hours": 2,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -348,7 +364,7 @@ async def seed_alma_ia_backlog():
             "title": "UX: Contador de mensajes no leídos no cuadra con total",
             "description": "Investigar discrepancia entre total de mensajes y contador de no leídos. Validar lógica de marcado como leído.",
             "priority": "medium",
-            "estimated_hours": 3,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": jroque_user_id
         },
@@ -356,7 +372,7 @@ async def seed_alma_ia_backlog():
             "title": "UX: Diferenciar avisos de encuestas visualmente",
             "description": "Agregar colores e iconos diferentes para distinguir avisos simples de encuestas. Mejorar navegación desde aviso a encuesta (doble clic).",
             "priority": "medium",
-            "estimated_hours": 4,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -364,7 +380,7 @@ async def seed_alma_ia_backlog():
             "title": "UX: Encuestas no deben obligar 4ta opción",
             "description": "Modificar formulario de creación de encuestas para permitir 2-4 opciones sin obligar la cuarta opción.",
             "priority": "medium",
-            "estimated_hours": 3,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -372,7 +388,7 @@ async def seed_alma_ia_backlog():
             "title": "BUG Android: Encuestas no muestran preguntas",
             "description": "Reportado en Android: las encuestas llegan pero no se muestran las preguntas. Validar parsing y renderizado de preguntas.",
             "priority": "high",
-            "estimated_hours": 4,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -388,7 +404,7 @@ async def seed_alma_ia_backlog():
             "title": "UX: Menú inferior desaparece en algunas pantallas",
             "description": "El menú de navegación inferior (Home, Agenda, etc) desaparece en algunas pantallas. Hacer que sea persistente en todas las vistas principales.",
             "priority": "medium",
-            "estimated_hours": 4,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         },
@@ -396,7 +412,7 @@ async def seed_alma_ia_backlog():
             "title": "UX: Inconsistencia en tonos de azul",
             "description": "Estandarizar paleta de colores. Los azules no son iguales en diferentes secciones. Crear guía de estilos y aplicar consistentemente.",
             "priority": "low",
-            "estimated_hours": 3,
+            "estimated_hours": 1,
             "status": "backlog",
             "assigned_to": miguel_user_id
         }
@@ -431,10 +447,11 @@ async def seed_alma_ia_backlog():
     
     print(f"📊 RESUMEN:")
     print(f"   👥 Usuarios creados: 2")
-    print(f"   📱 Tareas Frontend (Miguel): {frontend_count}")
-    print(f"   ⚙️  Tareas Backend (Jonathan): {backend_count}")
+    print(f"   📱 Tareas Frontend (Miguel): {frontend_count} (incluye 2h pruebas)")
+    print(f"   ⚙️  Tareas Backend (Jonathan): {backend_count} (incluye 2h pruebas)")
     print(f"   🐛 Issues reportados: {issues_count}")
-    print(f"   📋 TOTAL TAREAS: {total_tasks}\n")
+    print(f"   📋 TOTAL TAREAS: {total_tasks}")
+    print(f"   ⏱️  Horas estimadas: {frontend_count + backend_count + issues_count} horas (1h por tarea + 2h pruebas c/u)\n")
     
     print("🔐 CREDENCIALES NUEVOS USUARIOS:\n")
     print("👨‍💻 MIGUEL ALEJANDRO ESTANGA (Frontend Developer):")
