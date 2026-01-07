@@ -22,6 +22,7 @@ import {
   UserPlus
 } from 'lucide-react';
 import ProjectSelector from '../components/ProjectSelector';
+import TaskAttachments from '../components/TaskAttachments';
 
 const TaskBoard = () => {
   const { user } = useAuth();
@@ -33,6 +34,7 @@ const TaskBoard = () => {
   const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
   const [reassignData, setReassignData] = useState({ new_assigned_to: '', reason: '' });
   const [users, setUsers] = useState([]);
+  const [taskAttachments, setTaskAttachments] = useState([]);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -161,6 +163,7 @@ const TaskBoard = () => {
         due_date: '',
         technical_notes: ''
       });
+      setTaskAttachments([]);
     } catch (error) {
       toast.error('Error al guardar tarea');
       console.error(error);
@@ -177,6 +180,7 @@ const TaskBoard = () => {
       due_date: task.due_date ? task.due_date.split('T')[0] : '',
       technical_notes: task.technical_notes || ''
     });
+    setTaskAttachments(task.attachments || []);
     setDialogOpen(true);
   };
 
@@ -342,6 +346,18 @@ const TaskBoard = () => {
                 />
                 <p className="text-xs text-slate-500 mt-1">Documenta los endpoints, APIs o detalles técnicos necesarios</p>
               </div>
+
+              {editingTask && (
+                <TaskAttachments
+                  taskId={editingTask.id}
+                  attachments={taskAttachments}
+                  onAttachmentAdded={(newAttachment) => {
+                    setTaskAttachments([...taskAttachments, newAttachment]);
+                    loadTasks();
+                  }}
+                  requireImages={editingTask.created_at && new Date(editingTask.created_at) < new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)}
+                />
+              )}
               
               <div className="flex gap-2 justify-between">
                 <div>
@@ -488,12 +504,6 @@ const TaskBoard = () => {
               <p className="text-sm text-slate-400 mt-1">{editingTask?.description}</p>
             </div>
 
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
-              <p className="text-sm text-amber-400">
-                ⚠️ Debes documentar los endpoints técnicos antes de reasignar esta tarea
-              </p>
-            </div>
-
             <div>
               <Label>Reasignar a</Label>
               <Select 
@@ -511,6 +521,19 @@ const TaskBoard = () => {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label>Endpoints Técnicos / Notas de Implementación *</Label>
+              <Textarea
+                value={formData.technical_notes}
+                onChange={(e) => setFormData({ ...formData, technical_notes: e.target.value })}
+                className="bg-slate-900 border-slate-700 text-white"
+                rows={3}
+                placeholder="Ej: POST /api/users/validate, GET /api/reports/daily, etc."
+                required
+              />
+              <p className="text-xs text-slate-500 mt-1">Documenta los endpoints, APIs o detalles técnicos necesarios</p>
             </div>
 
             <div>

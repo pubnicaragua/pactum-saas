@@ -174,6 +174,15 @@ class ProjectUpdate(BaseModel):
     progress_percentage: Optional[int] = None
 
 # Task Models
+class TaskAttachment(BaseModel):
+    id: str
+    filename: str
+    file_type: str  # audio, image
+    file_url: str
+    uploaded_by: str
+    uploaded_at: str
+    size_bytes: Optional[int] = None
+
 class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
@@ -185,6 +194,7 @@ class TaskCreate(BaseModel):
     due_date: Optional[str] = None
     tags: List[str] = []
     technical_notes: Optional[str] = None  # Endpoints, APIs, notas técnicas
+    attachments: List[Dict[str, Any]] = []  # Archivos adjuntos (audios, imágenes)
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
@@ -197,6 +207,7 @@ class TaskUpdate(BaseModel):
     tags: Optional[List[str]] = None
     actual_hours: Optional[float] = None
     technical_notes: Optional[str] = None  # Endpoints, APIs, notas técnicas
+    attachments: Optional[List[Dict[str, Any]]] = None  # Archivos adjuntos
 
 class TaskReassign(BaseModel):
     new_assigned_to: str  # user_id del nuevo asignado
@@ -1000,6 +1011,73 @@ async def delete_task(task_id: str, user: dict = Depends(get_current_user)):
     await log_activity("task", task_id, "deleted", user, user["company_id"], {"title": task.get("title")})
     
     return {"message": "Tarea eliminada"}
+
+@api_router.post("/tasks/{task_id}/attachments")
+async def upload_task_attachment(
+    task_id: str,
+    file: UploadFile = File(...),
+    file_type: str = Form(...),
+    user: dict = Depends(get_current_user)
+):
+    """Upload audio or image attachment to a task"""
+    import base64
+    
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Tarea no encontrada")
+    
+    # Verify access to project
+    project = await db.projects.find_one({"id": task["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    # Validate file type
+    allowed_types = {
+        "audio": ["audio/webm", "audio/mp3", "audio/mpeg", "audio/wav", "audio/ogg"],
+        "image": ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
+    }
+    
+    if file_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Tipo de archivo no válido")
+    
+    if file.content_type not in allowed_types[file_type]:
+        raise HTTPException(status_code=400, detail=f"Formato de {file_type} no permitido")
+    
+    # Read file content
+    file_content = await file.read()
+    file_size = len(file_content)
+    
+    # Limit file size to 10MB
+    if file_size > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Archivo muy grande (máx 10MB)")
+    
+    # Convert to base64
+    file_base64 = base64.b64encode(file_content).decode('utf-8')
+    file_url = f"data:{file.content_type};base64,{file_base64}"
+    
+    # Create attachment object
+    attachment = {
+        "id": str(uuid.uuid4()),
+        "filename": file.filename,
+        "file_type": file_type,
+        "file_url": file_url,
+        "uploaded_by": user["id"],
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "size_bytes": file_size
+    }
+    
+    # Add attachment to task
+    await db.tasks.update_one(
+        {"id": task_id},
+        {"$push": {"attachments": attachment}}
+    )
+    
+    await log_activity("task", task_id, "attachment_added", user, user["company_id"], {
+        "filename": file.filename,
+        "type": file_type
+    })
+    
+    return {"message": "Archivo adjuntado exitosamente", "attachment": attachment}
 
 @api_router.post("/tasks/{task_id}/reassign")
 async def reassign_task(task_id: str, data: TaskReassign, user: dict = Depends(get_current_user)):
