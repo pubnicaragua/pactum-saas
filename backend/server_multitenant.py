@@ -1484,6 +1484,21 @@ async def update_phase(phase_id: str, data: PhaseUpdate, user: dict = Depends(ge
     
     return {"message": "Fase actualizada"}
 
+# ===================== USER MANAGEMENT =====================
+
+@api_router.get("/users")
+async def get_users(user: dict = Depends(get_current_user)):
+    """Get users for task assignment - filters by company"""
+    query = {"company_id": user["company_id"]}
+    
+    # Return users from same company, excluding passwords
+    users = await db.users.find(
+        query, 
+        {"_id": 0, "password": 0, "hashed_password": 0}
+    ).to_list(100)
+    
+    return users
+
 # ===================== COMPANY - USER MANAGEMENT =====================
 
 @api_router.get("/company/users")

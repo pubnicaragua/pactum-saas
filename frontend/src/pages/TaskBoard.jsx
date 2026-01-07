@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   Trash2,
   Edit,
-  GripVertical
+  GripVertical,
+  UserPlus
 } from 'lucide-react';
 import ProjectSelector from '../components/ProjectSelector';
 
@@ -29,18 +30,46 @@ const TaskBoard = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [draggedTask, setDraggedTask] = useState(null);
+  const [reassignDialogOpen, setReassignDialogOpen] = useState(false);
+  const [reassignData, setReassignData] = useState({ new_assigned_to: '', reason: '' });
+  const [users, setUsers] = useState([]);
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     priority: 'medium',
     estimated_hours: '',
-    due_date: ''
+    due_date: '',
+    technical_notes: ''
   });
 
   useEffect(() => {
     loadTasks();
+    loadUsers();
   }, []);
+
+  const loadUsers = async () => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'https://pactum-saas-backend.onrender.com';
+      const token = localStorage.getItem('pactum_token');
+      const response = await fetch(`${API_URL}/api/users`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      setUsers(data.filter(u => u.role === 'TEAM_MEMBER' || u.role === 'COMPANY_ADMIN'));
+    } catch (error) {
+      console.error('Error loading users:', error);
+    }
+  };
+
+  const calculateDueDate = (estimatedHours) => {
+    if (!estimatedHours || estimatedHours <= 0) return '';
+    const hoursPerDay = 8;
+    const daysNeeded = Math.ceil(estimatedHours / hoursPerDay);
+    const dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + daysNeeded);
+    return dueDate.toISOString().split('T')[0];
+  };
 
   const loadTasks = async () => {
     try {
@@ -129,7 +158,8 @@ const TaskBoard = () => {
         description: '',
         priority: 'medium',
         estimated_hours: '',
-        due_date: ''
+        due_date: '',
+        technical_notes: ''
       });
     } catch (error) {
       toast.error('Error al guardar tarea');
@@ -144,9 +174,48 @@ const TaskBoard = () => {
       description: task.description || '',
       priority: task.priority,
       estimated_hours: task.estimated_hours || '',
-      due_date: task.due_date ? task.due_date.split('T')[0] : ''
+      due_date: task.due_date ? task.due_date.split('T')[0] : '',
+      technical_notes: task.technical_notes || ''
     });
     setDialogOpen(true);
+  };
+
+  const handleReassign = async () => {
+    if (!reassignData.new_assigned_to || !reassignData.reason) {
+      toast.error('Debes seleccionar un usuario y proporcionar un motivo');
+      return;
+    }
+
+    if (!formData.technical_notes || formData.technical_notes.trim() === '') {
+      toast.error('Debes documentar los endpoints técnicos antes de reasignar');
+      return;
+    }
+
+    try {
+      await updateTask(editingTask.id, { technical_notes: formData.technical_notes });
+
+      const API_URL = process.env.REACT_APP_API_URL || 'https://pactum-saas-backend.onrender.com';
+      const token = localStorage.getItem('pactum_token');
+      const response = await fetch(`${API_URL}/api/tasks/${editingTask.id}/reassign`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(reassignData)
+      });
+
+      if (!response.ok) throw new Error('Error al reasignar');
+
+      toast.success('Tarea reasignada exitosamente');
+      setReassignDialogOpen(false);
+      setDialogOpen(false);
+      setReassignData({ new_assigned_to: '', reason: '' });
+      await loadTasks();
+    } catch (error) {
+      toast.error('Error al reasignar tarea');
+      console.error(error);
+    }
   };
 
   const handleDelete = async (taskId) => {
@@ -237,29 +306,65 @@ const TaskBoard = () => {
                   <Input
                     type="number"
                     value={formData.estimated_hours}
-                    onChange={(e) => setFormData({ ...formData, estimated_hours: e.target.value })}
+                    onChange={(e) => {
+                      const hours = e.target.value;
+                      setFormData({ 
+                        ...formData, 
+                        estimated_hours: hours,
+                        due_date: calculateDueDate(parseFloat(hours))
+                      });
+                    }}
                     className="bg-slate-900 border-slate-700 text-white"
                   />
                 </div>
               </div>
               
               <div>
-                <Label>Fecha de Vencimiento</Label>
+                <Label>Fecha de Vencimiento (calculada automáticamente)</Label>
                 <Input
                   type="date"
                   value={formData.due_date}
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                   className="bg-slate-900 border-slate-700 text-white"
+                  readOnly
                 />
+                <p className="text-xs text-slate-500 mt-1">Se calcula automáticamente según las horas estimadas (8h/día)</p>
               </div>
               
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  {editingTask ? 'Actualizar' : 'Crear'}
-                </Button>
+              <div>
+                <Label>Endpoints Técnicos / Notas de Implementación</Label>
+                <Textarea
+                  value={formData.technical_notes}
+                  onChange={(e) => setFormData({ ...formData, technical_notes: e.target.value })}
+                  className="bg-slate-900 border-slate-700 text-white"
+                  rows={3}
+                  placeholder="Ej: POST /api/users/validate, GET /api/reports/daily, etc."
+                />
+                <p className="text-xs text-slate-500 mt-1">Documenta los endpoints, APIs o detalles técnicos necesarios</p>
+              </div>
+              
+              <div className="flex gap-2 justify-between">
+                <div>
+                  {editingTask && (
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => setReassignDialogOpen(true)}
+                      className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Reasignar Tarea
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                    {editingTask ? 'Actualizar' : 'Crear'}
+                  </Button>
+                </div>
               </div>
             </form>
           </DialogContent>
@@ -370,6 +475,78 @@ const TaskBoard = () => {
           </div>
         ))}
       </div>
+
+      {/* Modal de Reasignación */}
+      <Dialog open={reassignDialogOpen} onOpenChange={setReassignDialogOpen}>
+        <DialogContent className="bg-slate-800 border-slate-700 text-white">
+          <DialogHeader>
+            <DialogTitle>Reasignar Tarea</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Tarea: {editingTask?.title}</Label>
+              <p className="text-sm text-slate-400 mt-1">{editingTask?.description}</p>
+            </div>
+
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+              <p className="text-sm text-amber-400">
+                ⚠️ Debes documentar los endpoints técnicos antes de reasignar esta tarea
+              </p>
+            </div>
+
+            <div>
+              <Label>Reasignar a</Label>
+              <Select 
+                value={reassignData.new_assigned_to} 
+                onValueChange={(value) => setReassignData({ ...reassignData, new_assigned_to: value })}
+              >
+                <SelectTrigger className="bg-slate-900 border-slate-700 text-white">
+                  <SelectValue placeholder="Selecciona un usuario" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700 text-white">
+                  {users.map(u => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.full_name || u.name || u.email} ({u.role === 'TEAM_MEMBER' ? 'Desarrollador' : 'Admin'})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Motivo de la reasignación *</Label>
+              <Textarea
+                value={reassignData.reason}
+                onChange={(e) => setReassignData({ ...reassignData, reason: e.target.value })}
+                className="bg-slate-900 border-slate-700 text-white"
+                rows={3}
+                placeholder="Ej: Esta tarea requiere conocimientos de frontend que corresponden a Miguel..."
+                required
+              />
+              <p className="text-xs text-slate-500 mt-1">Explica por qué esta tarea debe ser reasignada</p>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setReassignDialogOpen(false);
+                  setReassignData({ new_assigned_to: '', reason: '' });
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleReassign}
+                className="bg-orange-600 hover:bg-orange-700"
+              >
+                Reasignar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
