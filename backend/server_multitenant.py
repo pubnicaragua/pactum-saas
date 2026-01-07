@@ -204,11 +204,13 @@ class TaskCreate(BaseModel):
     tags: List[str] = []
     technical_notes: Optional[str] = None  # Endpoints, APIs, notas técnicas
     attachments: List[Dict[str, Any]] = []  # Archivos adjuntos (audios, imágenes)
+    task_group_id: Optional[str] = None  # ID del grupo de tareas al que pertenece
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     assigned_to: Optional[str] = None
+    task_group_id: Optional[str] = None
     status: Optional[str] = None
     priority: Optional[str] = None
     estimated_hours: Optional[float] = None
@@ -1161,6 +1163,143 @@ async def reassign_task(task_id: str, data: TaskReassign, user: dict = Depends(g
         "reason": data.reason
     }
 
+# ===================== TASK GROUPS =====================
+
+@api_router.get("/task-groups")
+async def get_task_groups(project_id: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """Get task groups for a project"""
+    query = {}
+    
+    if project_id:
+        query["project_id"] = project_id
+    else:
+        if user["role"] == "TEAM_MEMBER":
+            user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+            if user_projects:
+                project_ids = [p["id"] for p in user_projects]
+                query["project_id"] = {"$in": project_ids}
+            else:
+                query["project_id"] = {"$in": []}
+        elif user["role"] == "USER":
+            user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in user_projects]
+            query["project_id"] = {"$in": project_ids}
+        else:
+            company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
+            project_ids = [p["id"] for p in company_projects]
+            query["project_id"] = {"$in": project_ids}
+    
+    task_groups = await db.task_groups.find(query, {"_id": 0}).to_list(100)
+    return task_groups
+
+@api_router.post("/task-groups")
+async def create_task_group(data: dict, user: dict = Depends(get_current_user)):
+    """Create a new task group"""
+    project = await db.projects.find_one({"id": data["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    group_id = str(uuid.uuid4())
+    group_doc = {
+        "id": group_id,
+        "name": data["name"],
+        "description": data.get("description"),
+        "project_id": data["project_id"],
+        "total_estimated_hours": data["total_estimated_hours"],
+        "task_ids": data.get("task_ids", []),
+        "color": data.get("color", "#3b82f6"),
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.task_groups.insert_one(group_doc)
+    
+    # Update tasks with group_id
+    if data.get("task_ids"):
+        await db.tasks.update_many(
+            {"id": {"$in": data["task_ids"]}},
+            {"$set": {"task_group_id": group_id}}
+        )
+    
+    await log_activity("task_group", group_id, "created", user, user["company_id"], {"name": data["name"]})
+    
+    return {"id": group_id, "message": "Grupo de tareas creado"}
+
+@api_router.put("/task-groups/{group_id}")
+async def update_task_group(group_id: str, data: dict, user: dict = Depends(get_current_user)):
+    """Update a task group"""
+    group = await db.task_groups.find_one({"id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+    
+    project = await db.projects.find_one({"id": group["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    update_data = {k: v for k, v in data.items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.task_groups.update_one({"id": group_id}, {"$set": update_data})
+    
+    # Update tasks if task_ids changed
+    if "task_ids" in data:
+        # Remove group_id from old tasks
+        await db.tasks.update_many(
+            {"task_group_id": group_id},
+            {"$unset": {"task_group_id": ""}}
+        )
+        # Add group_id to new tasks
+        if data["task_ids"]:
+            await db.tasks.update_many(
+                {"id": {"$in": data["task_ids"]}},
+                {"$set": {"task_group_id": group_id}}
+            )
+    
+    await log_activity("task_group", group_id, "updated", user, user["company_id"], data)
+    
+    return {"message": "Grupo actualizado"}
+
+@api_router.delete("/task-groups/{group_id}")
+async def delete_task_group(group_id: str, user: dict = Depends(get_current_user)):
+    """Delete a task group"""
+    group = await db.task_groups.find_one({"id": group_id})
+    if not group:
+        raise HTTPException(status_code=404, detail="Grupo no encontrado")
+    
+    project = await db.projects.find_one({"id": group["project_id"]})
+    if not project:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+    
+    if user["role"] == "USER":
+        if user["id"] not in project.get("assigned_users", []):
+            raise HTTPException(status_code=403, detail="No tienes acceso a este proyecto")
+    elif project.get("company_id") != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    # Remove group_id from tasks
+    await db.tasks.update_many(
+        {"task_group_id": group_id},
+        {"$unset": {"task_group_id": ""}}
+    )
+    
+    await db.task_groups.delete_one({"id": group_id})
+    await log_activity("task_group", group_id, "deleted", user, user["company_id"], {})
+    
+    return {"message": "Grupo eliminado"}
+
 # ===================== TASK COMMENTS =====================
 
 @api_router.get("/tasks/{task_id}/comments")
@@ -1885,6 +2024,133 @@ async def update_phase(phase_id: str, data: PhaseUpdate, user: dict = Depends(ge
     
     return {"message": "Fase actualizada"}
 
+# ===================== ACCOUNTS RECEIVABLE =====================
+
+@api_router.get("/accounts-receivable")
+async def get_accounts_receivable(client_id: Optional[str] = None, status: Optional[str] = None, user: dict = Depends(get_current_user)):
+    """Get accounts receivable for the company"""
+    query = {"company_id": user["company_id"]}
+    
+    if client_id:
+        query["client_id"] = client_id
+    
+    if status:
+        query["status"] = status
+    
+    accounts = await db.accounts_receivable.find(query, {"_id": 0}).sort("due_date", 1).to_list(1000)
+    return accounts
+
+@api_router.post("/accounts-receivable")
+async def create_account_receivable(data: dict, user: dict = Depends(get_current_user)):
+    """Create a new account receivable"""
+    if user["role"] not in ["COMPANY_ADMIN", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Solo administradores pueden crear cuentas por cobrar")
+    
+    account_id = str(uuid.uuid4())
+    account_doc = {
+        "id": account_id,
+        "company_id": user["company_id"],
+        "client_id": data["client_id"],
+        "client_name": data["client_name"],
+        "amount": data["amount"],
+        "due_date": data["due_date"],
+        "invoice_number": data.get("invoice_number"),
+        "description": data.get("description"),
+        "is_partner": data.get("is_partner", False),
+        "partner_percentage": data.get("partner_percentage"),
+        "status": data.get("status", "pending"),
+        "paid_amount": 0,
+        "paid_date": None,
+        "notes": None,
+        "created_by": user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.accounts_receivable.insert_one(account_doc)
+    await log_activity("account_receivable", account_id, "created", user, user["company_id"], {"client_name": data["client_name"], "amount": data["amount"]})
+    
+    return {"id": account_id, "message": "Cuenta por cobrar creada"}
+
+@api_router.put("/accounts-receivable/{account_id}")
+async def update_account_receivable(account_id: str, data: dict, user: dict = Depends(get_current_user)):
+    """Update an account receivable"""
+    if user["role"] not in ["COMPANY_ADMIN", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Solo administradores pueden actualizar cuentas por cobrar")
+    
+    account = await db.accounts_receivable.find_one({"id": account_id})
+    if not account:
+        raise HTTPException(status_code=404, detail="Cuenta por cobrar no encontrada")
+    
+    if account["company_id"] != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    update_data = {k: v for k, v in data.items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Auto-update status based on paid_amount
+    if "paid_amount" in update_data:
+        if update_data["paid_amount"] >= account["amount"]:
+            update_data["status"] = "paid"
+        elif update_data["paid_amount"] > 0:
+            update_data["status"] = "partial"
+    
+    await db.accounts_receivable.update_one({"id": account_id}, {"$set": update_data})
+    await log_activity("account_receivable", account_id, "updated", user, user["company_id"], update_data)
+    
+    return {"message": "Cuenta por cobrar actualizada"}
+
+@api_router.delete("/accounts-receivable/{account_id}")
+async def delete_account_receivable(account_id: str, user: dict = Depends(get_current_user)):
+    """Delete an account receivable"""
+    if user["role"] not in ["COMPANY_ADMIN", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Solo administradores pueden eliminar cuentas por cobrar")
+    
+    account = await db.accounts_receivable.find_one({"id": account_id})
+    if not account:
+        raise HTTPException(status_code=404, detail="Cuenta por cobrar no encontrada")
+    
+    if account["company_id"] != user["company_id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    await db.accounts_receivable.delete_one({"id": account_id})
+    await log_activity("account_receivable", account_id, "deleted", user, user["company_id"], {})
+    
+    return {"message": "Cuenta por cobrar eliminada"}
+
+@api_router.get("/accounts-receivable/stats")
+async def get_accounts_receivable_stats(user: dict = Depends(get_current_user)):
+    """Get accounts receivable statistics"""
+    query = {"company_id": user["company_id"]}
+    
+    accounts = await db.accounts_receivable.find(query, {"_id": 0}).to_list(1000)
+    
+    total_amount = sum(acc["amount"] for acc in accounts)
+    total_paid = sum(acc.get("paid_amount", 0) for acc in accounts)
+    total_pending = total_amount - total_paid
+    
+    pending_count = len([acc for acc in accounts if acc["status"] == "pending"])
+    paid_count = len([acc for acc in accounts if acc["status"] == "paid"])
+    overdue_count = len([acc for acc in accounts if acc["status"] == "overdue"])
+    partial_count = len([acc for acc in accounts if acc["status"] == "partial"])
+    
+    partner_accounts = [acc for acc in accounts if acc.get("is_partner", False)]
+    partner_total = sum(acc["amount"] for acc in partner_accounts)
+    partner_coverage = sum(acc["amount"] * (acc.get("partner_percentage", 0) / 100) for acc in partner_accounts)
+    
+    return {
+        "total_amount": total_amount,
+        "total_paid": total_paid,
+        "total_pending": total_pending,
+        "pending_count": pending_count,
+        "paid_count": paid_count,
+        "overdue_count": overdue_count,
+        "partial_count": partial_count,
+        "partner_total": partner_total,
+        "partner_coverage": partner_coverage,
+        "partner_coverage_percentage": (partner_coverage / partner_total * 100) if partner_total > 0 else 0
+    }
+
 # ===================== USER MANAGEMENT =====================
 
 @api_router.get("/users")
@@ -2235,6 +2501,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 app.include_router(api_router)

@@ -162,6 +162,35 @@ export const updatePhase = (id, data) =>
 export const createPhaseComment = (phaseId, data) => 
   api.post(`/phases/${phaseId}/comments`, data);
 
+// Task Groups
+export const getTaskGroups = (projectId = null) => 
+  api.get('/task-groups', { params: { project_id: projectId } });
+
+export const createTaskGroup = (data) => 
+  api.post('/task-groups', data);
+
+export const updateTaskGroup = (id, data) => 
+  api.put(`/task-groups/${id}`, data);
+
+export const deleteTaskGroup = (id) => 
+  api.delete(`/task-groups/${id}`);
+
+// Accounts Receivable
+export const getAccountsReceivable = (clientId = null, status = null) => 
+  api.get('/accounts-receivable', { params: { client_id: clientId, status } });
+
+export const createAccountReceivable = (data) => 
+  api.post('/accounts-receivable', data);
+
+export const updateAccountReceivable = (id, data) => 
+  api.put(`/accounts-receivable/${id}`, data);
+
+export const deleteAccountReceivable = (id) => 
+  api.delete(`/accounts-receivable/${id}`);
+
+export const getAccountsReceivableStats = () => 
+  api.get('/accounts-receivable/stats');
+
 // Activity Logs
 export const getActivityLogs = (entityType, limit = 100) => 
   api.get('/activity-logs', { params: { entity_type: entityType, limit } });
