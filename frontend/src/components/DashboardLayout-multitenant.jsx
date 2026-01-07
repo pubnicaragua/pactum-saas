@@ -16,6 +16,7 @@ const DashboardLayout = () => {
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
   const isRegularUser = user?.role === 'USER';
   const isTeamMember = user?.role === 'TEAM_MEMBER';
+  const isFinancialAdmin = user?.email === 'admin@pactum.com';
 
   const navigation = isSuperAdmin ? [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -33,6 +34,7 @@ const DashboardLayout = () => {
     { name: 'Actividades', href: '/actividades-proyecto', icon: Calendar },
   ] : [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    ...(isFinancialAdmin ? [{ name: 'Financiero', href: '/financiero', icon: DollarSign }] : []),
     { name: 'Clientes', href: '/clientes', icon: Users },
     { name: 'Actividades', href: '/actividades', icon: Calendar },
     { name: 'Dashboard Proyecto', href: '/dashboard-proyecto', icon: Mountain },

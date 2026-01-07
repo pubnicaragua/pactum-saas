@@ -355,6 +355,11 @@ async def update_payment(payment_id: str, data: dict, user: dict = Depends(get_c
 @api_router.get("/tasks")
 async def get_tasks(project_id: Optional[str] = None, week: Optional[int] = None, user: dict = Depends(get_current_user)):
     query = {}
+    
+    # Si no es Admin, filtrar por tareas asignadas al usuario
+    if user["role"] != "Admin":
+        query["assigned_to"] = user["id"]
+    
     if project_id:
         query["project_id"] = project_id
     if week:

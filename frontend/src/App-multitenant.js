@@ -18,6 +18,7 @@ import ClientsManagement from './pages/ClientsManagement';
 import ActivitiesManagement from './pages/ActivitiesManagement';
 import InversionesJessy from './pages/InversionesJessy';
 import ContractsPactum from './pages/ContractsPactum';
+import FinancialDashboard from './pages/FinancialDashboard';
 import DashboardLayout from './components/DashboardLayout-multitenant';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
@@ -120,6 +121,12 @@ function AppRoutes() {
         <Route path="actividades" element={
           <ProtectedRoute>
             {user?.role === 'TEAM_MEMBER' ? <Navigate to="/tareas" replace /> : <ActivitiesManagement />}
+          </ProtectedRoute>
+        } />
+        
+        <Route path="financiero" element={
+          <ProtectedRoute>
+            {user?.email === 'admin@pactum.com' ? <FinancialDashboard /> : <Navigate to="/dashboard" replace />}
           </ProtectedRoute>
         } />
       </Route>
