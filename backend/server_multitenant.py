@@ -86,6 +86,13 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    name: Optional[str] = None
+    role: Optional[str] = None
+    status: Optional[str] = None
+
 class UserResponse(BaseModel):
     id: str
     email: str
