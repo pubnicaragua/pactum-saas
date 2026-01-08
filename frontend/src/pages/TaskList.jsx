@@ -99,8 +99,11 @@ const TaskList = () => {
   const loadTasks = async () => {
     try {
       const projectId = localStorage.getItem('project_id');
-      // Don't pass projectId if user is TEAM_MEMBER - let backend handle filtering by assigned projects
-      const response = user?.role === 'TEAM_MEMBER' ? await getTasks() : await getTasks(projectId);
+      console.log('🔍 TaskList - Loading tasks for project_id:', projectId);
+      
+      // ALWAYS pass projectId to ensure proper filtering
+      const response = await getTasks(projectId);
+      console.log('✅ TaskList - Loaded tasks:', response.data.length, 'tasks');
       setTasks(response.data);
     } catch (error) {
       toast.error('Error al cargar tareas');

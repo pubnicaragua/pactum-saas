@@ -1,0 +1,55 @@
+title,description,status,priority,estimated_hours
+1. Módulo de CRM - Gestión de clientes y contactos,Desarrollo e implementación de: Módulo de CRM - Gestión de clientes y contactos,backlog,high,40
+2. Sistema de facturación electrónica,Desarrollo e implementación de: Sistema de facturación electrónica,backlog,high,40
+3. Dashboard ejecutivo con KPIs en tiempo real,Desarrollo e implementación de: Dashboard ejecutivo con KPIs en tiempo real,backlog,high,40
+4. Módulo de inventario y almacén,Desarrollo e implementación de: Módulo de inventario y almacén,backlog,high,40
+LanguageSelection - Pantalla de selección de idioma,Archivo: LanguageSelectionScreen.tsx | Navegación: LanguageSelection | Acceso inicial al abrir la app antes de Welcome,backlog,medium,4
+Welcome - Pantalla de bienvenida,Archivo: WelcomeScreen.tsx | Navegación: Welcome | Desde LanguageSelection o app inicial,backlog,medium,4
+SignIn - Pantalla de inicio de sesión,Archivo: SignInScreen.tsx | Navegación: SignIn | APIs: signIn() getCurrentUser() | Desde Welcome o enlaces de login,backlog,high,8
+SignUp - Pantalla de registro,Archivo: SignUpScreen.tsx | Navegación: SignUp | APIs: signUpWithMetadata() | Desde Welcome o enlaces de registro,backlog,high,8
+AuthCallback - Callback de autenticación,Archivo: AuthCallbackScreen.tsx | Navegación: AuthCallback | APIs: authCallback() | Automático tras login exitoso (OAuth),backlog,high,4
+UploadAvatar - Subir foto de perfil,Archivo: UploadAvatarScreen.tsx | Navegación: UploadAvatar | APIs: updateUser() Supabase Storage | Tras SignUp en flujo de onboarding,backlog,medium,6
+PickGoals - Selección de objetivos,Archivo: PickGoalsScreen.tsx | Navegación: PickGoals | APIs: updateUser() | Secuencial desde UploadAvatar,backlog,medium,6
+PickInterests - Selección de intereses,Archivo: PickInterestsScreen.tsx | Navegación: PickInterests | APIs: updateUserInterestsViaRPC() | Tras PickGoals,backlog,medium,6
+PickKnowledge - Selección de conocimientos,Archivo: PickKnowledgeScreen.tsx | Navegación: PickKnowledge | APIs: updateUser() | Tras PickInterests,backlog,medium,6
+CommunityRecommendations - Recomendaciones de comunidades,Archivo: CommunityRecommendationsScreen.tsx | Navegación: CommunityRecommendations | APIs: getRecommendedCommunities() | Tras OnboardingComplete o desde Communities,backlog,medium,8
+HomeFeed - Feed principal,Archivo: HomeFeedScreen.tsx | Navegación: HomeFeed | APIs: getUserFeed() likePost() | Tras onboarding o desde menú principal,backlog,high,16
+Sidebar - Menú lateral,Archivo: Sidebar.tsx | Navegación: Sidebar | Componente de navegación principal,backlog,high,8
+CreatePost - Crear publicación,Archivo: CreatePostScreen.tsx | Navegación: CreatePost | APIs: createPost() | Desde HomeFeed o menú de posts,backlog,high,12
+CreateCommunityPost - Crear post en comunidad,Archivo: CreateCommunityPostScreen.tsx | Navegación: CreateCommunityPost | APIs: createCommunityPost() | Desde CommunityDetail o CreatePost,backlog,medium,10
+PostDetail - Detalle de publicación,Archivo: PostDetailScreen.tsx | Navegación: PostDetail | APIs: getPostDetail() | Desde HomeFeed o taps en posts,backlog,high,12
+CommunityPostDetail - Detalle de post de comunidad,Archivo: CommunityPostDetailScreen.tsx | Navegación: CommunityPostDetail | APIs: getCommunityPostDetail() | Desde Communities o PostDetail,backlog,medium,10
+VideoPlayer - Reproductor de video,Archivo: VideoPlayerScreen.tsx | Navegación: VideoPlayer | Desde PostDetail con videos,backlog,medium,8
+SharePost - Compartir publicación,Archivo: SharePostScreen.tsx | Navegación: SharePost | APIs: sharePost() | Desde PostDetail o menú de compartir,backlog,low,6
+SavedPosts - Publicaciones guardadas,Archivo: SavedPostsScreen.tsx | Navegación: SavedPosts | APIs: getSavedPosts() | Desde Profile o menú de guardados,backlog,medium,8
+Communities - Lista de comunidades,Archivo: CommunitiesScreen.tsx | Navegación: Communities | APIs: listCommunities() joinCommunity() | Desde HomeFeed o menú lateral,backlog,high,12
+CommunityDetail - Detalle de comunidad,Archivo: CommunityDetailScreen.tsx | Navegación: CommunityDetail | APIs: getCommunityDetail() | Desde Communities,backlog,high,14
+CommunitySettings - Configuración de comunidad,Archivo: CommunitySettingsScreen.tsx | Navegación: CommunitySettings | APIs: updateCommunitySettings() | Desde CommunityDetail,backlog,medium,8
+CommunityMembers - Miembros de comunidad,Archivo: CommunityMembersScreen.tsx | Navegación: CommunityMembers | APIs: getCommunityMembers() | Desde CommunityDetail,backlog,medium,8
+EditCommunity - Editar comunidad,Archivo: EditCommunityScreen.tsx | Navegación: EditCommunity | APIs: updateCommunity() | Desde CommunitySettings,backlog,medium,8
+CreateCommunity - Crear comunidad,Archivo: CreateCommunityScreen.tsx | Navegación: CreateCommunity | APIs: createCommunity() | Desde Communities,backlog,high,10
+Profile - Perfil de usuario,Archivo: ProfileScreen.tsx | Navegación: Profile | APIs: getUserComplete() followUser() | Desde HomeFeed o menú de perfil,backlog,high,14
+EditProfile - Editar perfil,Archivo: EditProfileScreen.tsx | Navegación: EditProfile | APIs: updateUser() | Desde Profile,backlog,high,10
+Followers - Seguidores,Archivo: FollowersScreen.tsx | Navegación: Followers | APIs: getFollowers() | Desde Profile,backlog,medium,8
+Following - Siguiendo,Archivo: FollowingScreen.tsx | Navegación: Following | APIs: getFollowing() | Desde Profile,backlog,medium,8
+Settings - Configuración,Archivo: SettingsScreen.tsx | Navegación: Settings | APIs: authSignOut() | Desde Profile o menú lateral,backlog,high,10
+ChatList - Lista de chats,Archivo: ChatListScreen.tsx | Navegación: ChatList | APIs: getChats() | Desde HomeFeed o menú de mensajes,backlog,high,12
+ChatScreen - Pantalla de chat,Archivo: ChatScreen.tsx | Navegación: Chat | APIs: getChatMessages() sendMessage() | Desde ChatList,backlog,high,16
+NewMessageScreen - Nuevo mensaje,Archivo: NewMessageScreen.tsx | Navegación: NewMessage | APIs: startNewChat() | Desde ChatList,backlog,medium,8
+GroupChat - Chat grupal,Archivo: GroupChatScreen.tsx | Navegación: GroupChat | APIs: getGroupMessages() | Desde ChatList o Communities,backlog,medium,14
+Notifications - Notificaciones,Archivo: NotificationsScreen.tsx | Navegación: Notifications | APIs: getNotifications() | Desde menú lateral o notificaciones push,backlog,high,10
+News - Noticias,Archivo: NewsScreen.tsx | Navegación: News | APIs: getNews() | Desde HomeFeed o menú de contenido,backlog,medium,10
+NewsDetail - Detalle de noticia,Archivo: NewsDetailScreen.tsx | Navegación: NewsDetail | APIs: getNewsDetail() | Desde News,backlog,medium,8
+Educacion - Educación,Archivo: EducacionScreen.tsx | Navegación: Educacion | APIs: getCourses() getLessons() | Desde el menú de educación,backlog,high,12
+CourseDetail - Detalle de curso,Archivo: CourseDetailScreen.tsx | Navegación: CourseDetail | APIs: getCourseDetail() | Desde Educacion,backlog,medium,10
+LearningPaths - Rutas de aprendizaje,Archivo: LearningPathsScreen.tsx | Navegación: LearningPaths | APIs: getLearningPaths() | Desde Educacion,backlog,medium,10
+MarketInfo - Información de mercado,Archivo: MarketInfoScreen.tsx | Navegación: MarketInfo | APIs: getMarketData() | Desde HomeFeed o menú financiero,backlog,high,14
+Promotions - Promociones,Archivo: PromotionsScreen.tsx | Navegación: Promotions | APIs: getPromotions() | Desde MarketInfo,backlog,low,6
+PromotionDetail - Detalle de promoción,Archivo: PromotionDetailScreen.tsx | Navegación: PromotionDetail | Desde Promotions,backlog,low,4
+Herramientas - Herramientas financieras,Archivo: HerramientasScreen.tsx | Navegación: Herrramientas | Desde menú financiero,backlog,medium,8
+Inversionista - Panel de inversionista,Archivo: InversionistaScreen.tsx | Navegación: Inversionista | Desde Inversiones,backlog,high,16
+PlanificadorFinanciero - Planificador financiero,Archivo: PlanificadorFinancieroScreen.tsx | Navegación: PlanificadorFinanciero | Desde menú financiero,backlog,high,14
+CazaHormigas - Caza hormigas,Archivo: CazaHormigasScreen.tsx | Navegación: CazaHormigas | Desde menú financiero,backlog,medium,10
+ReportesAvanzados - Reportes avanzados,Archivo: ReportesAvanzadosScreen.tsx | Navegación: ReportesAvanzados | Desde menú financiero,backlog,medium,12
+SimuladorInversiones - Simulador de inversiones,Archivo: InvestmentSimulator.tsx | Navegación: Simulator | APIs: processPayment() | Desde Settings o menús especiales,backlog,high,16
+IRIChatScreen - Chat con IRI (IA),Archivo: IRIChatScreen.tsx | Navegación: IRIChat | APIs: getIRIChatMessages() | Desde menú especial o Communities,backlog,high,18

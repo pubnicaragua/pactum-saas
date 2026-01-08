@@ -544,7 +544,7 @@ async def seed_initial_data():
         "name": "Investi - Sistema de Gestión de Inversiones",
         "description": "Plataforma completa para gestión de portafolios de inversión y análisis financiero",
         "client_name": "Investi",
-        "budget": 12000.00,
+        "budget": 10000.00,
         "status": "en_progreso",
         "start_date": datetime.now(timezone.utc).isoformat(),
         "end_date": (datetime.now(timezone.utc) + timedelta(days=150)).isoformat(),
@@ -564,7 +564,7 @@ async def seed_initial_data():
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     await db.projects.insert_one(investi_project_doc)
-    print("✅ Proyecto Investi creado: $12,000")
+    print("✅ Proyecto Investi creado: $10,000")
     
     # Create Solvendo user (Partner/Cliente)
     solvendo_user_id = str(uuid.uuid4())
