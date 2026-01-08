@@ -54,6 +54,8 @@ const ProjectDashboard = () => {
   const loadData = async () => {
     try {
       const projectId = localStorage.getItem('project_id');
+      console.log('📊 ProjectDashboard - Loading data for project_id:', projectId);
+      
       const [projectsRes, tasksRes, paymentsRes, phasesRes] = await Promise.all([
         getProjects(),
         getTasks(projectId),
@@ -61,8 +63,16 @@ const ProjectDashboard = () => {
         getPhases(projectId)
       ]);
       
-      if (projectsRes.data.length > 0) {
-        const proj = projectsRes.data[0];
+      // Find the specific project by ID if projectId exists
+      let proj = null;
+      if (projectId && projectsRes.data.length > 0) {
+        proj = projectsRes.data.find(p => p.id === projectId) || projectsRes.data[0];
+      } else if (projectsRes.data.length > 0) {
+        proj = projectsRes.data[0];
+      }
+      
+      if (proj) {
+        console.log('✅ ProjectDashboard - Loaded project:', proj.name);
         setProject(proj);
         setEditData({
           name: proj.name || '',

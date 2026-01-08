@@ -833,11 +833,20 @@ async def get_projects(user: dict = Depends(get_current_user), company: dict = D
     """Get all projects for the company or assigned to user"""
     query = {"company_id": user["company_id"]}
     
-    # If user is not admin, only show projects assigned to them
-    if user.get("role") == "USER":
+    # Users (role USER) can only see their assigned projects
+    if user["role"] == "USER":
+        query["assigned_users"] = user["id"]
+    # TEAM_MEMBER can only see their assigned projects
+    elif user["role"] == "TEAM_MEMBER":
         query["assigned_users"] = user["id"]
     
     projects = await db.projects.find(query, {"_id": 0}).to_list(100)
+    
+    # Debug logging
+    print(f"🔍 get_projects - User: {user['email']}, Role: {user['role']}, Projects found: {len(projects)}")
+    for proj in projects:
+        print(f"   - {proj.get('name')} (ID: {proj.get('id')})")
+    
     return projects
 
 @api_router.post("/projects")
@@ -924,8 +933,14 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[str] = No
     """Get tasks for user's projects"""
     query = {}
     
-    # If project_id is provided, filter by it first
+    # If project_id is provided, filter by it first AND verify user has access
     if project_id:
+        # Verify user has access to this specific project
+        if user["role"] == "USER":
+            project = await db.projects.find_one({"id": project_id, "assigned_users": user["id"]})
+            if not project:
+                # User doesn't have access to this project, return empty
+                return []
         query["project_id"] = project_id
     else:
         # TEAM_MEMBER solo ve tareas de sus proyectos asignados

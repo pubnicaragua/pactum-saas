@@ -728,7 +728,7 @@ async def seed_initial_data():
     print("   Password: AlmaIA#2026!")
     print("   Acceso:   Ver su proyecto asignado\n")
     
-    print("🟠 INVESTI (Cliente/Partner - Proyecto $12,000):")
+    print("🟠 INVESTI (Cliente/Partner - Proyecto $10,000):")
     print("   Email:    admin@investi.com")
     print("   Password: Investi#2026!")
     print("   Acceso:   Ver su proyecto asignado\n")
