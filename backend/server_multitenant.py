@@ -832,7 +832,10 @@ async def get_projects(user: dict = Depends(get_current_user), company: dict = D
     # SUPER_ADMIN ve todos los proyectos
     if user["role"] == "SUPER_ADMIN":
         query = {}
-    # TODOS los demás roles solo ven proyectos donde están asignados
+    # COMPANY_ADMIN ve TODOS los proyectos de su empresa
+    elif user["role"] == "COMPANY_ADMIN":
+        query = {"company_id": user["company_id"]}
+    # USER y TEAM_MEMBER solo ven proyectos donde están asignados
     else:
         query = {
             "company_id": user["company_id"],
