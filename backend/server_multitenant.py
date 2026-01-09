@@ -961,12 +961,25 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[str] = No
     
     tasks = await db.tasks.find(query, {"_id": 0}).to_list(1000)
     
-    # Enrich tasks with assigned user names
-    for task in tasks:
-        if task.get("assigned_to"):
-            assigned_user = await db.users.find_one({"id": task["assigned_to"]}, {"_id": 0, "name": 1})
-            if assigned_user:
-                task["assigned_to_name"] = assigned_user.get("name", "Sin asignar")
+    # OPTIMIZACIÓN: Obtener todos los usuarios de una vez en lugar de uno por uno
+    if tasks:
+        # Extraer IDs únicos de usuarios asignados
+        assigned_user_ids = list(set(t.get("assigned_to") for t in tasks if t.get("assigned_to")))
+        
+        if assigned_user_ids:
+            # Obtener todos los usuarios en una sola query
+            users = await db.users.find(
+                {"id": {"$in": assigned_user_ids}},
+                {"_id": 0, "id": 1, "name": 1}
+            ).to_list(len(assigned_user_ids))
+            
+            # Crear un mapa id -> nombre para búsqueda rápida
+            user_map = {u["id"]: u["name"] for u in users}
+            
+            # Enriquecer tareas con nombres
+            for task in tasks:
+                if task.get("assigned_to"):
+                    task["assigned_to_name"] = user_map.get(task["assigned_to"], "Sin asignar")
     
     return tasks
 
@@ -2277,45 +2290,66 @@ async def get_available_modules():
 
 @api_router.get("/dashboard/stats")
 async def get_dashboard_stats(user: dict = Depends(get_current_user), company: dict = Depends(get_user_company)):
-    """Get dashboard statistics for the company"""
+    """Get dashboard statistics for the company - OPTIMIZADO"""
     if user.get("role") == "SUPER_ADMIN":
         return await get_global_metrics(user)
     
     company_id = user["company_id"]
     
-    # Client stats
-    total_clients = await db.clients.count_documents({"company_id": company_id})
-    active_clients = await db.clients.count_documents({"company_id": company_id, "status": "active"})
+    # OPTIMIZACIÓN: Para USER/TEAM_MEMBER, filtrar por proyectos asignados
+    if user["role"] in ["USER", "TEAM_MEMBER"]:
+        # Obtener proyectos asignados
+        user_projects = await db.projects.find(
+            {"assigned_users": user["id"]},
+            {"_id": 0, "id": 1, "client_id": 1}
+        ).to_list(100)
+        
+        project_ids = [p["id"] for p in user_projects]
+        client_ids = [p.get("client_id") for p in user_projects if p.get("client_id")]
+        
+        # Stats filtradas por proyectos asignados
+        total_clients = len(client_ids)
+        active_clients = await db.clients.count_documents({"id": {"$in": client_ids}, "status": "active"}) if client_ids else 0
+        
+        # Tareas del usuario
+        total_tasks = await db.tasks.count_documents({"project_id": {"$in": project_ids}}) if project_ids else 0
+        pending_tasks = await db.tasks.count_documents({"project_id": {"$in": project_ids}, "status": "Por Hacer"}) if project_ids else 0
+        completed_tasks = await db.tasks.count_documents({"project_id": {"$in": project_ids}, "status": "Completada"}) if project_ids else 0
+        
+        return {
+            "total_clients": total_clients,
+            "active_clients": active_clients,
+            "total_activities": total_tasks,
+            "pending_activities": pending_tasks,
+            "completed_activities": completed_tasks,
+            "total_users": 1,
+            "recent_activities": [],
+            "recent_clients": []
+        }
     
-    # Activity stats
-    total_activities = await db.activities.count_documents({"company_id": company_id})
-    pending_activities = await db.activities.count_documents({"company_id": company_id, "status": "pendiente"})
-    completed_activities = await db.activities.count_documents({"company_id": company_id, "completed": True})
+    # COMPANY_ADMIN: Stats de toda la empresa (ejecutar queries en paralelo con asyncio.gather)
+    import asyncio
     
-    # User stats
-    total_users = await db.users.count_documents({"company_id": company_id})
-    
-    # Recent activities
-    recent_activities = await db.activities.find(
-        {"company_id": company_id},
-        {"_id": 0}
-    ).sort("created_at", -1).limit(10).to_list(10)
-    
-    # Recent clients
-    recent_clients = await db.clients.find(
-        {"company_id": company_id},
-        {"_id": 0}
-    ).sort("created_at", -1).limit(10).to_list(10)
+    results = await asyncio.gather(
+        db.clients.count_documents({"company_id": company_id}),
+        db.clients.count_documents({"company_id": company_id, "status": "active"}),
+        db.activities.count_documents({"company_id": company_id}),
+        db.activities.count_documents({"company_id": company_id, "status": "pendiente"}),
+        db.activities.count_documents({"company_id": company_id, "completed": True}),
+        db.users.count_documents({"company_id": company_id}),
+        db.activities.find({"company_id": company_id}, {"_id": 0}).sort("created_at", -1).limit(10).to_list(10),
+        db.clients.find({"company_id": company_id}, {"_id": 0}).sort("created_at", -1).limit(10).to_list(10)
+    )
     
     return {
-        "total_clients": total_clients,
-        "active_clients": active_clients,
-        "total_activities": total_activities,
-        "pending_activities": pending_activities,
-        "completed_activities": completed_activities,
-        "total_users": total_users,
-        "recent_activities": recent_activities,
-        "recent_clients": recent_clients
+        "total_clients": results[0],
+        "active_clients": results[1],
+        "total_activities": results[2],
+        "pending_activities": results[3],
+        "completed_activities": results[4],
+        "total_users": results[5],
+        "recent_activities": results[6],
+        "recent_clients": results[7]
     }
 
 # ===================== ACTIVITY LOGS =====================
@@ -2559,6 +2593,103 @@ async def fix_project_assignments():
             "success": True,
             "message": "Asignaciones actualizadas correctamente",
             "results": results
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
+@app.post("/api/fix-task-assignments")
+async def fix_task_assignments():
+    """
+    ENDPOINT CRÍTICO: Corrige las asignaciones cruzadas de tareas
+    - Tareas de proyectos de Amaru deben estar asignadas a usuarios de Software Nicaragua
+    - Tareas de proyectos de Alma IA deben estar asignadas a Miguel/Jonathan
+    """
+    try:
+        # 1. Obtener empresas
+        software_nic = await db.companies.find_one({"name": "Software Nicaragua"})
+        
+        # Buscar empresa de almaia por usuarios
+        almaia_users = await db.users.find({"email": {"$regex": "almaia", "$options": "i"}}).to_list(10)
+        almaia_company_id = almaia_users[0]["company_id"] if almaia_users else None
+        almaia_company = await db.companies.find_one({"id": almaia_company_id}) if almaia_company_id else None
+        
+        if not software_nic or not almaia_company:
+            return {"error": "No se encontraron las empresas necesarias"}
+        
+        # 2. Obtener usuarios de cada empresa
+        software_nic_users = await db.users.find({"company_id": software_nic["id"]}).to_list(100)
+        almaia_users_full = await db.users.find({"company_id": almaia_company["id"]}).to_list(100)
+        
+        # 3. Obtener proyectos de cada empresa
+        software_nic_projects = await db.projects.find({"company_id": software_nic["id"]}).to_list(100)
+        almaia_projects = await db.projects.find({"company_id": almaia_company["id"]}).to_list(100)
+        
+        software_nic_project_ids = [p["id"] for p in software_nic_projects]
+        almaia_project_ids = [p["id"] for p in almaia_projects]
+        
+        # 4. Obtener todas las tareas
+        all_tasks = await db.tasks.find({}).to_list(1000)
+        
+        # 5. Separar tareas por empresa basado en project_id
+        software_nic_tasks = [t for t in all_tasks if t.get("project_id") in software_nic_project_ids]
+        almaia_tasks = [t for t in all_tasks if t.get("project_id") in almaia_project_ids]
+        orphan_tasks = [t for t in all_tasks if t.get("project_id") not in software_nic_project_ids + almaia_project_ids]
+        
+        # 6. Reasignar tareas de Software Nicaragua a usuarios de Software Nicaragua
+        software_nic_user_ids = [u["id"] for u in software_nic_users]
+        amaru_id = next((u["id"] for u in software_nic_users if "amaru" in u["email"].lower()), software_nic_user_ids[0] if software_nic_user_ids else None)
+        
+        fixed_software_nic = 0
+        for task in software_nic_tasks:
+            # Si la tarea está asignada a alguien que NO es de Software Nicaragua, reasignar a Amaru
+            if task.get("assigned_to") not in software_nic_user_ids:
+                await db.tasks.update_one(
+                    {"id": task["id"]},
+                    {"$set": {"assigned_to": amaru_id}}
+                )
+                fixed_software_nic += 1
+        
+        # 7. Reasignar tareas de Alma IA a usuarios de Alma IA (Miguel/Jonathan)
+        almaia_user_ids = [u["id"] for u in almaia_users_full]
+        miguel_id = next((u["id"] for u in almaia_users_full if "miguel" in u["email"].lower()), None)
+        jonathan_id = next((u["id"] for u in almaia_users_full if "jonathan" in u["email"].lower()), None)
+        
+        fixed_almaia = 0
+        for i, task in enumerate(almaia_tasks):
+            # Si la tarea está asignada a alguien que NO es de Alma IA, reasignar alternando Miguel/Jonathan
+            if task.get("assigned_to") not in almaia_user_ids:
+                new_assignee = miguel_id if i % 2 == 0 else jonathan_id
+                if new_assignee:
+                    await db.tasks.update_one(
+                        {"id": task["id"]},
+                        {"$set": {"assigned_to": new_assignee}}
+                    )
+                    fixed_almaia += 1
+        
+        return {
+            "success": True,
+            "message": "Asignaciones de tareas corregidas",
+            "results": {
+                "software_nicaragua": {
+                    "company": software_nic["name"],
+                    "projects": len(software_nic_projects),
+                    "tasks": len(software_nic_tasks),
+                    "tasks_fixed": fixed_software_nic,
+                    "assigned_to": "Amaru"
+                },
+                "almaia": {
+                    "company": almaia_company["name"],
+                    "projects": len(almaia_projects),
+                    "tasks": len(almaia_tasks),
+                    "tasks_fixed": fixed_almaia,
+                    "assigned_to": "Miguel/Jonathan (alternando)"
+                },
+                "orphan_tasks": len(orphan_tasks)
+            }
         }
     
     except Exception as e:
