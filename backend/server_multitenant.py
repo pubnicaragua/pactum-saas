@@ -2551,6 +2551,82 @@ app.add_middleware(
 app.include_router(api_router)
 
 # ===================== TEMPORARY FIX ENDPOINT =====================
+@app.post("/api/fix-assignments-final")
+async def fix_project_assignments_final():
+    """
+    ENDPOINT FINAL: Asigna usuarios a proyectos específicos basado en IDs reales del debug-data
+    """
+    try:
+        # IDs de usuarios (del debug-data.json)
+        admin_almaia_id = "2fb7bcd7-5afa-4ada-98fe-1c1dfa06857c"
+        miguel_id = "d4768a25-854e-4126-8390-4752166fe57c"
+        jonathan_id = "9df9a787-2224-4174-a988-54e7d434d873"
+        
+        # Buscar Amaru y Paolo
+        amaru = await db.users.find_one({"email": "activo2_26@gmail.com"})
+        paolo = await db.users.find_one({"email": "paoloce57@gmail.com"})
+        
+        amaru_id = amaru["id"] if amaru else None
+        paolo_id = paolo["id"] if paolo else None
+        
+        # IDs de proyectos (del debug-data.json)
+        alma_ia_project_id = "431bdc68-78be-4ed0-8e29-aa1d549c9f6d"
+        business_tech_project_id = "73153284-0582-4a4b-a577-d9781fffcd59"
+        investi_project_id = "9375a171-9260-4135-82cd-15c756e53d15"
+        solvendo_project_id = "59900ee5-9342-44af-af11-5504126443f1"
+        
+        # 1. Asignar Miguel, Jonathan y admin@almaia.com al proyecto Alma IA
+        await db.projects.update_one(
+            {"id": alma_ia_project_id},
+            {"$set": {"assigned_users": [admin_almaia_id, miguel_id, jonathan_id]}}
+        )
+        
+        # 2. Asignar Amaru y Paolo a los otros proyectos
+        other_project_users = []
+        if amaru_id:
+            other_project_users.append(amaru_id)
+        if paolo_id:
+            other_project_users.append(paolo_id)
+        
+        for project_id in [business_tech_project_id, investi_project_id, solvendo_project_id]:
+            await db.projects.update_one(
+                {"id": project_id},
+                {"$set": {"assigned_users": other_project_users}}
+            )
+        
+        return {
+            "success": True,
+            "message": "Asignaciones finales aplicadas correctamente",
+            "results": {
+                "alma_ia_project": {
+                    "project_id": alma_ia_project_id,
+                    "project_name": "Alma IA - Plataforma de Inteligencia Artificial",
+                    "assigned_users": [
+                        "admin@almaia.com",
+                        "miguel.estanga@almaia.com",
+                        "jonathan.roque@almaia.com"
+                    ]
+                },
+                "other_projects": {
+                    "projects": [
+                        "Business & Technology",
+                        "Investi",
+                        "Solvendo"
+                    ],
+                    "assigned_users": [
+                        amaru["email"] if amaru else "No encontrado",
+                        paolo["email"] if paolo else "No encontrado"
+                    ]
+                }
+            }
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @app.post("/api/fix-assignments-correct")
 async def fix_project_assignments_correct():
     """
