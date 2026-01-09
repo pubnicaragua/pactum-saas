@@ -2551,48 +2551,86 @@ app.add_middleware(
 app.include_router(api_router)
 
 # ===================== TEMPORARY FIX ENDPOINT =====================
-@app.post("/api/fix-assignments")
-async def fix_project_assignments():
+@app.post("/api/fix-assignments-correct")
+async def fix_project_assignments_correct():
     """
-    ENDPOINT TEMPORAL: Asigna todos los usuarios de cada empresa a todos los proyectos de esa empresa
-    Esto corrige el problema de usuarios que no ven sus proyectos
+    ENDPOINT CORRECTO: Asigna usuarios específicos a proyectos específicos basado en la empresa
+    - Miguel y Jonathan → Proyectos de Alma IA
+    - Paolo → Proyectos de Software Nicaragua (Amaru)
     """
     try:
-        # Obtener todas las empresas
-        companies = await db.companies.find({}).to_list(100)
+        # 1. Obtener empresas
+        software_nic = await db.companies.find_one({"name": "Software Nicaragua"})
         
-        results = []
+        # Buscar empresa de almaia
+        almaia_users = await db.users.find({"email": {"$regex": "almaia", "$options": "i"}}).to_list(10)
+        almaia_company_id = almaia_users[0]["company_id"] if almaia_users else None
+        almaia_company = await db.companies.find_one({"id": almaia_company_id}) if almaia_company_id else None
         
-        for company in companies:
-            company_id = company["id"]
-            company_name = company["name"]
-            
-            # Obtener todos los usuarios de esta empresa
-            users = await db.users.find({"company_id": company_id}).to_list(100)
-            user_ids = [user["id"] for user in users]
-            
-            # Obtener todos los proyectos de esta empresa
-            projects = await db.projects.find({"company_id": company_id}).to_list(100)
-            
-            # Asignar todos los usuarios a todos los proyectos de su empresa
-            for project in projects:
-                await db.projects.update_one(
-                    {"id": project["id"]},
-                    {"$set": {"assigned_users": user_ids}}
-                )
-            
-            results.append({
-                "company": company_name,
-                "users_count": len(users),
-                "projects_count": len(projects),
-                "users": [{"name": u["name"], "email": u["email"], "role": u["role"]} for u in users],
-                "projects": [{"name": p["name"], "id": p["id"]} for p in projects]
-            })
+        if not software_nic or not almaia_company:
+            return {"error": "No se encontraron las empresas"}
+        
+        # 2. Obtener usuarios específicos
+        miguel = await db.users.find_one({"email": {"$regex": "miguel.*almaia", "$options": "i"}})
+        jonathan = await db.users.find_one({"email": {"$regex": "jonathan.*almaia", "$options": "i"}})
+        admin_almaia = await db.users.find_one({"email": "admin@almaia.com"})
+        paolo = await db.users.find_one({"email": {"$regex": "paolo", "$options": "i"}})
+        amaru = await db.users.find_one({"email": {"$regex": "amaru", "$options": "i"}})
+        
+        # 3. Obtener proyectos
+        almaia_projects = await db.projects.find({"company_id": almaia_company["id"]}).to_list(100)
+        software_nic_projects = await db.projects.find({"company_id": software_nic["id"]}).to_list(100)
+        
+        # 4. Asignar usuarios a proyectos de Alma IA
+        almaia_user_ids = []
+        if admin_almaia:
+            almaia_user_ids.append(admin_almaia["id"])
+        if miguel:
+            almaia_user_ids.append(miguel["id"])
+        if jonathan:
+            almaia_user_ids.append(jonathan["id"])
+        
+        for project in almaia_projects:
+            await db.projects.update_one(
+                {"id": project["id"]},
+                {"$set": {"assigned_users": almaia_user_ids}}
+            )
+        
+        # 5. Asignar usuarios a proyectos de Software Nicaragua
+        software_nic_user_ids = []
+        if amaru:
+            software_nic_user_ids.append(amaru["id"])
+        if paolo:
+            software_nic_user_ids.append(paolo["id"])
+        
+        for project in software_nic_projects:
+            await db.projects.update_one(
+                {"id": project["id"]},
+                {"$set": {"assigned_users": software_nic_user_ids}}
+            )
         
         return {
             "success": True,
-            "message": "Asignaciones actualizadas correctamente",
-            "results": results
+            "message": "Asignaciones corregidas correctamente",
+            "results": {
+                "almaia": {
+                    "company": almaia_company["name"],
+                    "projects": len(almaia_projects),
+                    "assigned_users": [
+                        admin_almaia["email"] if admin_almaia else None,
+                        miguel["email"] if miguel else None,
+                        jonathan["email"] if jonathan else None
+                    ]
+                },
+                "software_nicaragua": {
+                    "company": software_nic["name"],
+                    "projects": len(software_nic_projects),
+                    "assigned_users": [
+                        amaru["email"] if amaru else None,
+                        paolo["email"] if paolo else None
+                    ]
+                }
+            }
         }
     
     except Exception as e:
