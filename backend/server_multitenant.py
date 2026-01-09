@@ -2516,10 +2516,60 @@ app.add_middleware(
 
 app.include_router(api_router)
 
+# ===================== TEMPORARY FIX ENDPOINT =====================
+@app.post("/api/fix-assignments")
+async def fix_project_assignments():
+    """
+    ENDPOINT TEMPORAL: Asigna todos los usuarios de cada empresa a todos los proyectos de esa empresa
+    Esto corrige el problema de usuarios que no ven sus proyectos
+    """
+    try:
+        # Obtener todas las empresas
+        companies = await db.companies.find({}).to_list(100)
+        
+        results = []
+        
+        for company in companies:
+            company_id = company["id"]
+            company_name = company["name"]
+            
+            # Obtener todos los usuarios de esta empresa
+            users = await db.users.find({"company_id": company_id}).to_list(100)
+            user_ids = [user["id"] for user in users]
+            
+            # Obtener todos los proyectos de esta empresa
+            projects = await db.projects.find({"company_id": company_id}).to_list(100)
+            
+            # Asignar todos los usuarios a todos los proyectos de su empresa
+            for project in projects:
+                await db.projects.update_one(
+                    {"id": project["id"]},
+                    {"$set": {"assigned_users": user_ids}}
+                )
+            
+            results.append({
+                "company": company_name,
+                "users_count": len(users),
+                "projects_count": len(projects),
+                "users": [{"name": u["name"], "email": u["email"], "role": u["role"]} for u in users],
+                "projects": [{"name": p["name"], "id": p["id"]} for p in projects]
+            })
+        
+        return {
+            "success": True,
+            "message": "Asignaciones actualizadas correctamente",
+            "results": results
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @app.get("/")
 async def root():
-    return {
-        "message": "Multi-Tenant ERP/CRM API",
+    return {"message": "Pactum SaaS API - Multi-tenant CRM",
         "version": "1.0.0",
         "status": "running"
     }
