@@ -617,8 +617,11 @@ async def get_clients(user: dict = Depends(get_current_user), company: dict = De
     if not company_id and user.get("role") != "SUPER_ADMIN":
         raise HTTPException(status_code=400, detail="Usuario no pertenece a ninguna empresa")
     
-    # TEAM_MEMBER solo ve clientes de sus proyectos asignados
-    if user.get("role") == "TEAM_MEMBER":
+    # SUPER_ADMIN ve todos los clientes
+    if user.get("role") == "SUPER_ADMIN":
+        query = {}
+    # TODOS los demás (COMPANY_ADMIN, TEAM_MEMBER, USER) solo ven clientes de sus proyectos asignados
+    else:
         # Obtener proyectos asignados al usuario
         user_projects = await db.projects.find(
             {"assigned_users": user["id"]},
@@ -630,14 +633,8 @@ async def get_clients(user: dict = Depends(get_current_user), company: dict = De
         if not client_ids:
             return []
         
-        clients = await db.clients.find(
-            {"id": {"$in": client_ids}},
-            {"_id": 0}
-        ).to_list(1000)
-        return clients
+        query = {"id": {"$in": client_ids}}
     
-    # COMPANY_ADMIN y SUPER_ADMIN ven todos los clientes
-    query = {"company_id": company_id} if company_id else {}
     clients = await db.clients.find(query, {"_id": 0}).to_list(1000)
     return clients
 
@@ -831,14 +828,16 @@ async def delete_activity(activity_id: str, user: dict = Depends(get_current_use
 @api_router.get("/projects")
 async def get_projects(user: dict = Depends(get_current_user), company: dict = Depends(get_user_company)):
     """Get all projects for the company or assigned to user"""
-    query = {"company_id": user["company_id"]}
     
-    # Users (role USER) can only see their assigned projects
-    if user["role"] == "USER":
-        query["assigned_users"] = user["id"]
-    # TEAM_MEMBER can only see their assigned projects
-    elif user["role"] == "TEAM_MEMBER":
-        query["assigned_users"] = user["id"]
+    # SUPER_ADMIN ve todos los proyectos
+    if user["role"] == "SUPER_ADMIN":
+        query = {}
+    # TODOS los demás roles solo ven proyectos donde están asignados
+    else:
+        query = {
+            "company_id": user["company_id"],
+            "assigned_users": user["id"]
+        }
     
     projects = await db.projects.find(query, {"_id": 0}).to_list(100)
     
@@ -943,8 +942,12 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[str] = No
                 return []
         query["project_id"] = project_id
     else:
-        # TEAM_MEMBER solo ve tareas de sus proyectos asignados
-        if user["role"] == "TEAM_MEMBER":
+        # SUPER_ADMIN ve todas las tareas
+        if user["role"] == "SUPER_ADMIN":
+            # No filter, see all tasks
+            pass
+        # COMPANY_ADMIN, TEAM_MEMBER y USER solo ven tareas de proyectos donde están asignados
+        else:
             user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
             if user_projects:
                 project_ids = [p["id"] for p in user_projects]
@@ -952,16 +955,6 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[str] = No
             else:
                 # Si no tiene proyectos asignados, no ve ninguna tarea
                 query["project_id"] = {"$in": []}
-        # Users can only see tasks from their assigned projects
-        elif user["role"] == "USER":
-            user_projects = await db.projects.find({"assigned_users": user["id"]}, {"_id": 0, "id": 1}).to_list(100)
-            project_ids = [p["id"] for p in user_projects]
-            query["project_id"] = {"$in": project_ids}
-        else:
-            # Company admins see all tasks from their company's projects
-            company_projects = await db.projects.find({"company_id": user["company_id"]}, {"_id": 0, "id": 1}).to_list(100)
-            project_ids = [p["id"] for p in company_projects]
-            query["project_id"] = {"$in": project_ids}
     
     if status:
         query["status"] = status
