@@ -2567,6 +2567,74 @@ async def fix_project_assignments():
             "error": str(e)
         }
 
+@app.get("/api/debug-data")
+async def debug_database_structure():
+    """
+    ENDPOINT DE DIAGNÓSTICO: Muestra la estructura completa de datos para debugging
+    """
+    try:
+        # Obtener Alma IA
+        alma_ia = await db.companies.find_one({"name": "Alma IA"})
+        
+        if not alma_ia:
+            return {"error": "Alma IA no encontrada"}
+        
+        # Usuarios de Alma IA
+        users = await db.users.find({"company_id": alma_ia["id"]}).to_list(100)
+        
+        # Proyectos de Alma IA
+        projects = await db.projects.find({"company_id": alma_ia["id"]}).to_list(100)
+        
+        # Tareas de Alma IA (por project_id)
+        project_ids = [p["id"] for p in projects]
+        tasks = await db.tasks.find({"project_id": {"$in": project_ids}}).to_list(1000)
+        
+        # Todas las tareas (para ver si hay tareas huérfanas)
+        all_tasks = await db.tasks.find({}).to_list(1000)
+        
+        return {
+            "alma_ia": {
+                "id": alma_ia["id"],
+                "name": alma_ia["name"]
+            },
+            "users": [
+                {
+                    "id": u["id"],
+                    "name": u["name"],
+                    "email": u["email"],
+                    "role": u["role"]
+                } for u in users
+            ],
+            "projects": [
+                {
+                    "id": p["id"],
+                    "name": p["name"],
+                    "company_id": p.get("company_id"),
+                    "assigned_users": p.get("assigned_users", []),
+                    "assigned_users_count": len(p.get("assigned_users", []))
+                } for p in projects
+            ],
+            "tasks_of_alma_ia_projects": [
+                {
+                    "id": t["id"],
+                    "title": t["title"],
+                    "project_id": t.get("project_id"),
+                    "assigned_to": t.get("assigned_to"),
+                    "status": t.get("status")
+                } for t in tasks
+            ],
+            "all_tasks_summary": {
+                "total": len(all_tasks),
+                "by_project": {}
+            }
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @app.get("/")
 async def root():
     return {"message": "Pactum SaaS API - Multi-tenant CRM",
