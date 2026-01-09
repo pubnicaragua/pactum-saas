@@ -2815,6 +2815,56 @@ async def fix_task_assignments():
             "error": str(e)
         }
 
+@app.get("/api/project-tasks-count")
+async def get_project_tasks_count():
+    """
+    Endpoint para contar tareas por proyecto
+    """
+    try:
+        projects = await db.projects.find({}).to_list(100)
+        
+        results = []
+        for project in projects:
+            tasks = await db.tasks.find({"project_id": project["id"]}).to_list(1000)
+            
+            results.append({
+                "project_id": project["id"],
+                "project_name": project["name"],
+                "company_id": project.get("company_id"),
+                "assigned_users": project.get("assigned_users", []),
+                "assigned_users_count": len(project.get("assigned_users", [])),
+                "tasks_count": len(tasks),
+                "tasks": [
+                    {
+                        "id": t["id"],
+                        "title": t["title"][:50] + "..." if len(t["title"]) > 50 else t["title"],
+                        "assigned_to": t.get("assigned_to"),
+                        "status": t.get("status")
+                    } for t in tasks[:5]  # Solo primeras 5 tareas como muestra
+                ]
+            })
+        
+        # Buscar usuario admin@investi.com
+        investi_user = await db.users.find_one({"email": "admin@investi.com"})
+        
+        return {
+            "success": True,
+            "projects": results,
+            "investi_user": {
+                "id": investi_user["id"] if investi_user else None,
+                "name": investi_user["name"] if investi_user else None,
+                "email": investi_user["email"] if investi_user else None,
+                "role": investi_user["role"] if investi_user else None,
+                "company_id": investi_user.get("company_id") if investi_user else None
+            } if investi_user else None
+        }
+    
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @app.get("/api/debug-data")
 async def debug_database_structure():
     """
