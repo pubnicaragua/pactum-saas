@@ -238,17 +238,19 @@ const ProjectDashboard = () => {
             )}
             {editing && (
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-slate-400">Presupuesto</label>
-                  <Input
-                    type="number"
-                    min="0"
-                    value={editData.budget}
-                    onChange={(e) => setEditData({ ...editData, budget: parseFloat(e.target.value) || 0 })}
-                    className="mt-1 bg-slate-900 border-slate-700 text-white"
-                    placeholder="0"
-                  />
-                </div>
+                {user?.role !== 'TEAM_MEMBER' && (
+                  <div>
+                    <label className="text-sm text-slate-400">Presupuesto</label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={editData.budget}
+                      onChange={(e) => setEditData({ ...editData, budget: parseFloat(e.target.value) || 0 })}
+                      className="mt-1 bg-slate-900 border-slate-700 text-white"
+                      placeholder="0"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="text-sm text-slate-400">Estado</label>
                   <Select value={editData.status} onValueChange={(value) => setEditData({ ...editData, status: value })}>

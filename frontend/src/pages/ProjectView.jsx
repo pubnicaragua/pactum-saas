@@ -131,17 +131,19 @@ const ProjectView = () => {
           
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-                  <DollarSign className="h-5 w-5 text-green-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-slate-400">Presupuesto</p>
-                  <p className="text-xl font-bold text-white">${project.budget.toLocaleString()}</p>
+            {user?.role !== 'TEAM_MEMBER' && (
+              <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-green-500/20 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Presupuesto</p>
+                    <p className="text-xl font-bold text-white">${project.budget.toLocaleString()}</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
               <div className="flex items-center gap-3">
