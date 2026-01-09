@@ -2570,62 +2570,99 @@ async def fix_project_assignments():
 @app.get("/api/debug-data")
 async def debug_database_structure():
     """
-    ENDPOINT DE DIAGNÓSTICO: Muestra la estructura completa de datos para debugging
+    ENDPOINT DE DIAGNÓSTICO: Muestra TODA la estructura de datos
     """
     try:
-        # Obtener Alma IA
-        alma_ia = await db.companies.find_one({"name": "Alma IA"})
+        # Obtener TODAS las empresas
+        all_companies = await db.companies.find({}).to_list(100)
         
-        if not alma_ia:
-            return {"error": "Alma IA no encontrada"}
+        # Obtener TODOS los usuarios
+        all_users = await db.users.find({}).to_list(1000)
         
-        # Usuarios de Alma IA
-        users = await db.users.find({"company_id": alma_ia["id"]}).to_list(100)
+        # Obtener TODOS los proyectos
+        all_projects = await db.projects.find({}).to_list(1000)
         
-        # Proyectos de Alma IA
-        projects = await db.projects.find({"company_id": alma_ia["id"]}).to_list(100)
-        
-        # Tareas de Alma IA (por project_id)
-        project_ids = [p["id"] for p in projects]
-        tasks = await db.tasks.find({"project_id": {"$in": project_ids}}).to_list(1000)
-        
-        # Todas las tareas (para ver si hay tareas huérfanas)
+        # Obtener TODAS las tareas
         all_tasks = await db.tasks.find({}).to_list(1000)
         
+        # Buscar específicamente usuarios con email que contenga "almaia"
+        almaia_users = [u for u in all_users if "almaia" in u.get("email", "").lower()]
+        
+        # Si hay usuarios de almaia, buscar su empresa
+        almaia_company = None
+        if almaia_users:
+            company_id = almaia_users[0].get("company_id")
+            almaia_company = next((c for c in all_companies if c["id"] == company_id), None)
+        
         return {
-            "alma_ia": {
-                "id": alma_ia["id"],
-                "name": alma_ia["name"]
+            "summary": {
+                "total_companies": len(all_companies),
+                "total_users": len(all_users),
+                "total_projects": len(all_projects),
+                "total_tasks": len(all_tasks)
             },
-            "users": [
+            "companies": [
                 {
-                    "id": u["id"],
-                    "name": u["name"],
-                    "email": u["email"],
-                    "role": u["role"]
-                } for u in users
+                    "id": c["id"],
+                    "name": c["name"],
+                    "email": c.get("email"),
+                    "status": c.get("status")
+                } for c in all_companies
             ],
-            "projects": [
-                {
-                    "id": p["id"],
-                    "name": p["name"],
-                    "company_id": p.get("company_id"),
-                    "assigned_users": p.get("assigned_users", []),
-                    "assigned_users_count": len(p.get("assigned_users", []))
-                } for p in projects
-            ],
-            "tasks_of_alma_ia_projects": [
-                {
-                    "id": t["id"],
-                    "title": t["title"],
-                    "project_id": t.get("project_id"),
-                    "assigned_to": t.get("assigned_to"),
-                    "status": t.get("status")
-                } for t in tasks
-            ],
-            "all_tasks_summary": {
-                "total": len(all_tasks),
-                "by_project": {}
+            "almaia_info": {
+                "company": {
+                    "id": almaia_company["id"],
+                    "name": almaia_company["name"]
+                } if almaia_company else None,
+                "users": [
+                    {
+                        "id": u["id"],
+                        "name": u["name"],
+                        "email": u["email"],
+                        "role": u["role"],
+                        "company_id": u.get("company_id")
+                    } for u in almaia_users
+                ],
+                "projects": [
+                    {
+                        "id": p["id"],
+                        "name": p["name"],
+                        "company_id": p.get("company_id"),
+                        "assigned_users": p.get("assigned_users", []),
+                        "assigned_users_count": len(p.get("assigned_users", []))
+                    } for p in all_projects if almaia_company and p.get("company_id") == almaia_company["id"]
+                ] if almaia_company else [],
+                "tasks": [
+                    {
+                        "id": t["id"],
+                        "title": t["title"],
+                        "project_id": t.get("project_id"),
+                        "assigned_to": t.get("assigned_to"),
+                        "status": t.get("status")
+                    } for t in all_tasks if almaia_company and any(
+                        p["id"] == t.get("project_id") 
+                        for p in all_projects 
+                        if p.get("company_id") == almaia_company["id"]
+                    )
+                ] if almaia_company else []
+            },
+            "all_users_by_company": {
+                c["name"]: [
+                    {
+                        "name": u["name"],
+                        "email": u["email"],
+                        "role": u["role"]
+                    } for u in all_users if u.get("company_id") == c["id"]
+                ] for c in all_companies
+            },
+            "all_projects_by_company": {
+                c["name"]: [
+                    {
+                        "id": p["id"],
+                        "name": p["name"],
+                        "assigned_users_count": len(p.get("assigned_users", []))
+                    } for p in all_projects if p.get("company_id") == c["id"]
+                ] for c in all_companies
             }
         }
     
