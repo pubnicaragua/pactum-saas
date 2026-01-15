@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import ProjectSelector from '../components/ProjectSelector';
@@ -59,13 +60,42 @@ export default function ProjectPhases() {
 
   const fetchPhases = async () => {
     try {
-      const response = await getPhases();
+      const projectId = localStorage.getItem('project_id');
+      const response = await getPhases(projectId);
       setPhases(response.data);
     } catch (error) {
       console.error('Error loading phases:', error);
       toast.error('Error al cargar las fases');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApprove = async (phaseId) => {
+    try {
+      await updatePhase(phaseId, { is_approved: true });
+      toast.success('Fase aprobada exitosamente');
+      fetchPhases();
+    } catch (error) {
+      console.error('Error approving phase:', error);
+      toast.error('Error al aprobar la fase');
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!selectedPhase || !newComment.trim()) return;
+    
+    setSubmitting(true);
+    try {
+      await createPhaseComment(selectedPhase.id, { text: newComment });
+      toast.success('Comentario agregado');
+      setNewComment('');
+      fetchPhases();
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast.error('Error al agregar comentario');
+    } finally {
+      setSubmitting(false);
     }
   };
 

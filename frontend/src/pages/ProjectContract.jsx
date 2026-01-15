@@ -73,8 +73,8 @@ export default function ProjectContract() {
 
     setUploading(true);
     try {
-      await uploadContract('project-crm-amaru', file);
-      toast.success('Contrato subido exitosamente');
+      // TODO: Implement contract upload functionality
+      toast.info('Funcionalidad de carga de contratos en desarrollo');
       fetchData();
     } catch (error) {
       console.error('Error uploading:', error);
@@ -92,8 +92,8 @@ export default function ProjectContract() {
 
     setAnalyzing(true);
     try {
-      const response = await analyzeContract(selectedContract.id, question);
-      setAnalysisResult(response.data);
+      // TODO: Implement AI contract analysis
+      toast.info('Análisis de contratos con IA en desarrollo');
     } catch (error) {
       console.error('Error analyzing:', error);
       toast.error('Error al analizar el contrato');

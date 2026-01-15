@@ -130,6 +130,16 @@ export const getTasks = (projectId = null, status = null) =>
 export const createTask = (data) => 
   api.post('/tasks', data);
 
+// Notifications
+export const getNotifications = () =>
+  api.get('/notifications');
+
+export const markNotificationRead = (id) =>
+  api.put(`/notifications/${id}/read`);
+
+export const getUnreadNotificationsCount = () =>
+  api.get('/notifications/unread/count');
+
 export const updateTask = (id, data) => 
   api.put(`/tasks/${id}`, data);
 

@@ -1018,6 +1018,55 @@ async def create_task(data: TaskCreate, user: dict = Depends(get_current_user)):
     
     return {"id": task_id, "message": "Tarea creada"}
 
+async def calculate_project_progress(project_id: str):
+    """Calculate project progress based on completed tasks"""
+    all_tasks = await db.tasks.find({"project_id": project_id}).to_list(1000)
+    
+    if not all_tasks:
+        return 0
+    
+    completed_tasks = [t for t in all_tasks if t.get("status") == "done"]
+    progress = int((len(completed_tasks) / len(all_tasks)) * 100)
+    
+    return progress
+
+async def send_milestone_notification(project_id: str, old_progress: int, new_progress: int):
+    """Send notification when project reaches milestone (25%, 50%, 75%, 100%)"""
+    milestones = [25, 50, 75, 100]
+    
+    for milestone in milestones:
+        # Check if we just crossed this milestone
+        if old_progress < milestone <= new_progress:
+            project = await db.projects.find_one({"id": project_id})
+            if not project:
+                continue
+            
+            # Get client user
+            client = await db.clients.find_one({"id": project.get("client_id")})
+            if not client:
+                continue
+            
+            # Find client user by email
+            client_user = await db.users.find_one({"email": client.get("email")})
+            if not client_user:
+                continue
+            
+            # Create notification
+            notification_id = str(uuid.uuid4())
+            notification = {
+                "id": notification_id,
+                "user_id": client_user["id"],
+                "project_id": project_id,
+                "type": "milestone",
+                "title": f"¡Hito alcanzado: {milestone}%!",
+                "message": f"El proyecto '{project.get('name')}' ha alcanzado el {milestone}% de progreso. {'¡Listo para el siguiente pago!' if milestone in [25, 50, 75] else '¡Proyecto completado!'}",
+                "read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.notifications.insert_one(notification)
+            print(f"📧 Notificación de hito {milestone}% enviada al cliente {client.get('name')}")
+
 @api_router.put("/tasks/{task_id}")
 async def update_task(task_id: str, data: TaskUpdate, user: dict = Depends(get_current_user)):
     """Update task"""
@@ -1036,11 +1085,27 @@ async def update_task(task_id: str, data: TaskUpdate, user: dict = Depends(get_c
     elif project.get("company_id") != user["company_id"]:
         raise HTTPException(status_code=403, detail="Acceso denegado")
     
+    # Store old progress before update
+    old_progress = project.get("progress_percentage", 0)
+    
     update_data = {k: v for k, v in data.dict(exclude_unset=True).items()}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.tasks.update_one({"id": task_id}, {"$set": update_data})
     await log_activity("task", task_id, "updated", user, user["company_id"], update_data)
+    
+    # Recalculate project progress if task status changed
+    if "status" in update_data:
+        new_progress = await calculate_project_progress(task["project_id"])
+        await db.projects.update_one(
+            {"id": task["project_id"]},
+            {"$set": {"progress_percentage": new_progress, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Send milestone notification if applicable
+        await send_milestone_notification(task["project_id"], old_progress, new_progress)
+        
+        print(f"📊 Progreso del proyecto actualizado: {old_progress}% -> {new_progress}%")
     
     return {"message": "Tarea actualizada"}
 
@@ -1895,6 +1960,45 @@ async def get_financial_summary(user: dict = Depends(get_current_user)):
         "total_reserves": total_reserves,
         "projected_balance": projected_balance
     }
+
+# ===================== NOTIFICATIONS =====================
+
+@api_router.get("/notifications")
+async def get_notifications(user: dict = Depends(get_current_user)):
+    """Get notifications for current user"""
+    notifications = await db.notifications.find(
+        {"user_id": user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return notifications
+
+@api_router.put("/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, user: dict = Depends(get_current_user)):
+    """Mark notification as read"""
+    notification = await db.notifications.find_one({"id": notification_id})
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notificación no encontrada")
+    
+    if notification["user_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Acceso denegado")
+    
+    await db.notifications.update_one(
+        {"id": notification_id},
+        {"$set": {"read": True}}
+    )
+    
+    return {"message": "Notificación marcada como leída"}
+
+@api_router.get("/notifications/unread/count")
+async def get_unread_count(user: dict = Depends(get_current_user)):
+    """Get count of unread notifications"""
+    count = await db.notifications.count_documents({
+        "user_id": user["id"],
+        "read": False
+    })
+    
+    return {"count": count}
 
 # ===================== PAYMENTS MANAGEMENT =====================
 
