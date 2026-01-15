@@ -15,10 +15,13 @@ export default function ProjectSelector() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Solo mostrar para COMPANY_ADMIN
-  if (user?.role !== 'COMPANY_ADMIN') {
+  // Mostrar para COMPANY_ADMIN y SUPER_ADMIN
+  if (!user || (user.role !== 'COMPANY_ADMIN' && user.role !== 'SUPER_ADMIN')) {
+    console.log('ProjectSelector: Not showing - user role:', user?.role);
     return null;
   }
+
+  console.log('ProjectSelector: Showing for user role:', user.role);
 
   useEffect(() => {
     fetchClients();

@@ -620,7 +620,10 @@ async def get_clients(user: dict = Depends(get_current_user), company: dict = De
     # SUPER_ADMIN ve todos los clientes
     if user.get("role") == "SUPER_ADMIN":
         query = {}
-    # TODOS los demás (COMPANY_ADMIN, TEAM_MEMBER, USER) solo ven clientes de sus proyectos asignados
+    # COMPANY_ADMIN ve todos los clientes de su empresa
+    elif user.get("role") == "COMPANY_ADMIN":
+        query = {"company_id": company_id}
+    # TEAM_MEMBER y USER solo ven clientes de sus proyectos asignados
     else:
         # Obtener proyectos asignados al usuario
         user_projects = await db.projects.find(
