@@ -1,9 +1,10 @@
 import asyncio
+import os
 from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timezone
 
-MONGO_URI = "mongodb+srv://pubnicaragua:Pactum2026!@cluster0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-DB_NAME = "pactum_saas"
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://pubnicaragua:Pactum2026!@cluster0.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+DB_NAME = os.getenv("DB_NAME", "pactum_saas")
 
 async def update_amaru_payments():
     """Update Amaru project payment dates and progress"""
