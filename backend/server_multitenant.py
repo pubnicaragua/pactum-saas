@@ -1028,6 +1028,10 @@ async def calculate_project_progress(project_id: str):
     completed_tasks = [t for t in all_tasks if t.get("status") == "done"]
     progress = int((len(completed_tasks) / len(all_tasks)) * 100)
     
+    # Ensure minimum 30% progress when there are tasks
+    if progress < 30:
+        progress = 30
+    
     return progress
 
 async def send_milestone_notification(project_id: str, old_progress: int, new_progress: int):
@@ -1709,11 +1713,26 @@ async def update_task_status(task_id: str, status: str, user: dict = Depends(get
     elif project.get("company_id") != user["company_id"]:
         raise HTTPException(status_code=403, detail="Acceso denegado")
     
+    # Store old progress before update
+    old_progress = project.get("progress_percentage", 0)
+    
     await db.tasks.update_one(
         {"id": task_id}, 
         {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     await log_activity("task", task_id, "status_changed", user, user["company_id"], {"status": status})
+    
+    # Recalculate project progress
+    new_progress = await calculate_project_progress(task["project_id"])
+    await db.projects.update_one(
+        {"id": task["project_id"]},
+        {"$set": {"progress_percentage": new_progress, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Send milestone notification if applicable
+    await send_milestone_notification(task["project_id"], old_progress, new_progress)
+    
+    print(f"📊 Progreso del proyecto actualizado: {old_progress}% -> {new_progress}%")
     
     return {"message": "Estado actualizado"}
 
