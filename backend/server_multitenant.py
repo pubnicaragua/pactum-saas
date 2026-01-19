@@ -3096,6 +3096,69 @@ async def debug_database_structure():
             "error": str(e)
         }
 
+@app.post("/api/admin/fix-amaru-project")
+async def fix_amaru_project():
+    """Temporary endpoint to fix Amaru project progress and payment dates"""
+    try:
+        # Find Amaru project
+        amaru_project = await db.projects.find_one({"name": {"$regex": "Amaru", "$options": "i"}})
+        
+        if not amaru_project:
+            return {"success": False, "error": "Proyecto Amaru no encontrado"}
+        
+        # Calculate and update progress
+        all_tasks = await db.tasks.find({"project_id": amaru_project["id"]}).to_list(1000)
+        
+        if all_tasks:
+            completed_tasks = [t for t in all_tasks if t.get("status") == "done"]
+            progress = int((len(completed_tasks) / len(all_tasks)) * 100)
+            
+            # Ensure minimum 30%
+            if progress < 30:
+                progress = 30
+            
+            await db.projects.update_one(
+                {"id": amaru_project["id"]},
+                {"$set": {
+                    "progress_percentage": progress,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        
+        # Update payment dates
+        payments = await db.payments.find({"project_id": amaru_project["id"]}).to_list(10)
+        payments.sort(key=lambda x: x.get("payment_number", 0))
+        
+        payment_dates = {
+            2: "2026-01-17T00:00:00+00:00",
+            3: "2026-01-25T00:00:00+00:00",
+            4: "2026-02-01T00:00:00+00:00"
+        }
+        
+        updated_payments = []
+        for payment in payments:
+            payment_num = payment.get("payment_number")
+            if payment_num in payment_dates:
+                new_date = payment_dates[payment_num]
+                await db.payments.update_one(
+                    {"id": payment["id"]},
+                    {"$set": {
+                        "due_date": new_date,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                updated_payments.append(f"Pago {payment_num}: {new_date[:10]}")
+        
+        return {
+            "success": True,
+            "project": amaru_project["name"],
+            "progress_updated": progress if all_tasks else 0,
+            "payments_updated": updated_payments
+        }
+    
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
 @app.get("/")
 async def root():
     return {"message": "Pactum SaaS API - Multi-tenant CRM",
