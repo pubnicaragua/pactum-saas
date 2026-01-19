@@ -215,7 +215,7 @@ export default function ProjectPhases() {
                   <div>
                     <h4 className="text-sm font-medium text-slate-400 mb-2">Entregables:</h4>
                     <ul className="space-y-2">
-                      {phase.deliverables?.map((deliverable, idx) => (
+                      {Array.isArray(phase.deliverables) && phase.deliverables.map((deliverable, idx) => (
                         <li key={idx} className="flex items-start gap-2">
                           <ChevronRight className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
                           <span className="text-sm text-slate-300">{deliverable}</span>

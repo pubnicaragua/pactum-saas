@@ -31,7 +31,7 @@ const DashboardLayout = () => {
     { name: 'Tareas', href: '/tareas', icon: ListTodo },
     { name: 'Tablero Kanban', href: '/kanban', icon: KanbanSquare },
     { name: 'Pagos', href: '/pagos', icon: DollarSign },
-    { name: 'Contrato', href: '/contrato', icon: FileText },
+    { name: 'Contrato', href: '/contratos', icon: FileText },
     { name: 'Actividades', href: '/actividades-proyecto', icon: Calendar },
   ] : [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -46,7 +46,7 @@ const DashboardLayout = () => {
     { name: 'Tablero Kanban', href: '/kanban', icon: KanbanSquare },
     { name: 'Reasignaciones', href: '/reasignaciones', icon: ArrowRightLeft },
     { name: 'Pagos', href: '/pagos', icon: DollarSign },
-    { name: 'Contrato', href: '/contrato', icon: FileText },
+    { name: 'Contrato', href: '/contratos', icon: FileText },
   ];
 
   const isActive = (path) => location.pathname === path;
